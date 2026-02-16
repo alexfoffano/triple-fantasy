@@ -84,9 +84,17 @@ function updateHandInteractivity() {
   document.querySelectorAll('.hand .card').forEach(el => {
     const owner = el.dataset.owner;
     let canAct = false;
-    if (state.aiLevel === "off") {
+
+    if (state.isOnline) {
+      // ONLINE: Só posso mexer na MINHA mão ('you') e SE for minha vez
+      // Jamais posso mexer na mão do oponente ('ai')
+      canAct = (owner === 'you' && state.yourTurn);
+    }
+    else if (state.aiLevel === "off") {
+      // LOCAL MULTIPLAYER (Hotseat): Posso mexer na mão de quem for a vez
       canAct = (owner === 'you' && state.yourTurn) || (owner === 'ai' && !state.yourTurn);
     } else {
+      // VS AI: Só minha mão e minha vez
       canAct = (owner === 'you' && state.yourTurn);
     }
 
