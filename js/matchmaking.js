@@ -31,9 +31,13 @@ export class Matchmaking {
 
         const roomRef = doc(db, "matches", this.roomId);
 
+        const expireAt = new Date();
+        expireAt.setDate(expireAt.getDate() + 3); // Sala expira em 3 dias
+
         // Estado inicial da partida
         const initialData = {
             createdAt: serverTimestamp(),
+            expireAt: expireAt,
             status: 'waiting',
             roundId: this.roundId, // ID da rodada atual no servidor
             hostConnected: true,
