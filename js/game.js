@@ -201,6 +201,9 @@ function initUI() {
         originalHandle(data);
 
         console.log("Hook handleRoomUpdate:", data); // Debug
+        // Log extra details
+        console.log("My role:", state.matchmaking.playerId);
+        console.log("Guest connected?", data.guestConnected);
 
         if (data.guestConnected && state.matchmaking.playerId === 'host') {
           // Verifica se já não estamos jogando para evitar restart visual
@@ -210,6 +213,8 @@ function initUI() {
             console.log("Oponente detectado! Iniciando partida...");
             lobby.classList.add("hidden");
             startOnlineMatch('host');
+          } else {
+            console.log("Ignorando hook: Lobby já escondido (já estamos jogando?)");
           }
         }
       };
