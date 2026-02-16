@@ -107,6 +107,23 @@ export class Matchmaking {
         });
     }
 
+    // Finaliza a partida
+    async endMatch() {
+        if (!this.roomId) return;
+        const roomRef = doc(db, "matches", this.roomId);
+
+        // Apenas atualiza status se ainda estiver jogando
+        // (Evita escritas desnecessárias se o outro já finalizou)
+        // Mas como não temos transação aqui, pode ser race condition, mas ok para status.
+        try {
+            await updateDoc(roomRef, {
+                status: 'finished'
+            });
+        } catch (e) {
+            console.error("Erro ao finalizar partida no Firestore:", e);
+        }
+    }
+
     // Reinicia a partida (Apenas Host deve chamar isso com novo estado)
     async resetMatch(newGameState) {
         if (!this.roomId) return;

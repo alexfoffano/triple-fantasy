@@ -777,6 +777,12 @@ function endGame() {
 
   // ONLINE: Botões diferentes
   if (state.isOnline) {
+    // FINALIZA PARTIDA NO FIRESTORE
+    // Isso garante que o status mude para 'finished' e evita loop de rematch
+    if (state.matchmaking && typeof state.matchmaking.endMatch === 'function') {
+      state.matchmaking.endMatch();
+    }
+
     // Remove botões antigos para não duplicar listeners
     const actions = document.querySelector("#result-modal .actions");
     actions.innerHTML = `
