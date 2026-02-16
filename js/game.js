@@ -147,29 +147,43 @@ function initUI() {
 
 
   $("#btn-create-room").addEventListener("click", async () => {
-    document.getElementById("deck-modal").classList.add("hidden");
-    document.getElementById("lobby-modal").classList.remove("hidden");
+    try {
+      document.getElementById("deck-modal").classList.add("hidden");
+      document.getElementById("lobby-modal").classList.remove("hidden");
+      $("#lobby-status").textContent = "Criando sala no servidor...";
 
-    const roomId = await state.matchmaking.createRoom();
-    const link = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-    $("#room-link").value = link;
+      const roomId = await state.matchmaking.createRoom();
 
-    // Monitorar conexão
-    const checkInterval = setInterval(() => {
-      // O matchmaking.js já faz o listen, mas precisamos saber quando começar
-      // Vamos adicionar um callback ou verificar o status via hook
-    }, 1000);
+      // Robust link generation (handles file:// protocol where origin is null)
+      let baseUrl = window.location.href.split('?')[0];
+      const link = `${baseUrl}?room=${roomId}`;
 
-    // Hook no matchmaking para saber quando o oponente entrar
-    const originalHandle = state.matchmaking.handleRoomUpdate.bind(state.matchmaking);
-    state.matchmaking.handleRoomUpdate = (data) => {
-      originalHandle(data);
-      if (data.guestConnected && state.matchmaking.playerId === 'host') {
-        // Oponente entrou!
-        document.getElementById("lobby-modal").classList.add("hidden");
-        startOnlineMatch('host');
-      }
-    };
+      $("#room-link").value = link;
+      $("#lobby-status").textContent = "Aguardando oponente...";
+
+      // Monitorar conexão
+      const checkInterval = setInterval(() => {
+        // O matchmaking.js já faz o listen, mas precisamos saber quando começar
+        // Vamos adicionar um callback ou verificar o status via hook
+      }, 1000);
+
+      // Hook no matchmaking para saber quando o oponente entrar
+      const originalHandle = state.matchmaking.handleRoomUpdate.bind(state.matchmaking);
+      state.matchmaking.handleRoomUpdate = (data) => {
+        originalHandle(data);
+        if (data.guestConnected && state.matchmaking.playerId === 'host') {
+          // Oponente entrou!
+          document.getElementById("lobby-modal").classList.add("hidden");
+          startOnlineMatch('host');
+        }
+      };
+    } catch (e) {
+      console.error("Erro ao criar sala:", e);
+      $("#lobby-status").textContent = "Erro: " + e.message;
+      alert("Erro ao criar sala: " + e.message + "\nVerifique se a configuração do Firebase está correta.");
+      document.getElementById("lobby-modal").classList.add("hidden");
+      document.getElementById("deck-modal").classList.remove("hidden");
+    }
   });
 
   $("#btn-copy-link").addEventListener("click", () => {

@@ -24,6 +24,7 @@ export class Matchmaking {
 
     // Cria uma nova sala
     async createRoom() {
+        console.log("Matchmaking: Gerando Room ID...");
         this.roomId = this.generateRoomId();
         this.playerId = 'host';
 
@@ -40,10 +41,16 @@ export class Matchmaking {
             lastMove: null // Última jogada para animação
         };
 
-        await setDoc(roomRef, initialData);
-        this.listenToRoom(this.roomId);
-
-        return this.roomId;
+        console.log("Matchmaking: Salvando sala no Firestore...", this.roomId);
+        try {
+            await setDoc(roomRef, initialData);
+            console.log("Matchmaking: Sala criada com sucesso!");
+            this.listenToRoom(this.roomId);
+            return this.roomId;
+        } catch (e) {
+            console.error("Matchmaking: Erro ao criar sala:", e);
+            throw e;
+        }
     }
 
     // Entra em uma sala existente
