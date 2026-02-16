@@ -1,0 +1,601 @@
+:root {
+  /* --- CORES --- */
+  --bg: #0b1117; 
+  --panel: #0f1722; 
+  --panel2: #0d1520; 
+  --ink: #e6edf3; 
+  --muted: #9fb0c1;
+  --you: #4ade80; 
+  --ai: #f87171; 
+  --accent: #60a5fa; 
+  --gold: #f59e0b;
+
+  /* --- DIMENSÕES DINÂMICAS --- */
+  --card-h: min(24vh, 180px);
+  --card-w: calc(var(--card-h) * 0.75);
+  --gap: 1.5vh; 
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 100vw;
+  height: 100dvh;
+  background: radial-gradient(circle at 50% 10%, #132235, #0b1117);
+  color: var(--ink);
+  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   TOPBAR
+   ========================================================================== */
+.topbar {
+  position: relative;
+  height: 60px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(11, 26, 51, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 50;
+  transition: all 0.3s ease;
+}
+
+.tb-left h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+
+.center-wrap {
+  display: flex; justify-content: center; align-items: center; gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.status-line {
+  background: rgba(11, 25, 40, 0.6);
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.scoreline { display: flex; align-items: center; gap: 8px; }
+.scoreline .pill {
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-weight: 800; font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 24, 40, 0.8);
+}
+.scoreline .pill.you { color: var(--you); box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.2); }
+.scoreline .pill.ai  { color: var(--ai);  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.2); }
+
+.tb-right { display: flex; gap: 10px; align-items: center; }
+
+.btn.small {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e6edf3; cursor: pointer; font-weight: 600;
+}
+.hamburger {
+  width: 40px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  gap: 5px; cursor: pointer;
+}
+.hamburger span { display: block; width: 20px; height: 2px; background: #cfe3ff; }
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL
+   ========================================================================== */
+.layout {
+  position: absolute;
+  top: 60px; bottom: 0; left: 0; right: 0;
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+  gap: 4vw;
+  padding: 10px;
+}
+
+/* ==========================================================================
+   TABULEIRO
+   ========================================================================== */
+.board-wrap {
+  position: relative;
+  z-index: 10;
+  display: flex; flex-direction: column; 
+  align-items: center; justify-content: center;
+}
+
+.rule-banner {
+  position: absolute;
+  top: -40px;
+  left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px; font-weight: 800; letter-spacing: 1px;
+  color: var(--accent);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+}
+.rule-banner.hidden { display: none; }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, var(--card-w));
+  grid-template-rows: repeat(3, var(--card-h));
+  gap: var(--gap);
+  padding: var(--gap);
+  background: rgba(13, 21, 32, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  transition: all 0.3s ease;
+}
+
+.cell {
+  width: 100%; height: 100%;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s ease-out;
+}
+
+.cell.drag-hover {
+  border-color: var(--accent) !important;
+  background: rgba(96, 165, 250, 0.15);
+  box-shadow: inset 0 0 20px rgba(96, 165, 250, 0.3), 0 0 15px rgba(96, 165, 250, 0.4);
+}
+
+.cell .element-badge {
+  position: absolute; top: 4px; right: 4px;
+  font-size: 10px; font-weight: bold;
+  padding: 2px 6px; border-radius: 4px;
+  background: rgba(0,0,0,0.6); color: #fff;
+  z-index: 5; pointer-events: none;
+}
+
+/* ==========================================================================
+   MÃOS (HANDS)
+   ========================================================================== */
+.hand {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-content: center; justify-items: center;
+  
+  width: calc((var(--card-w) * 2) + 24px); 
+  height: auto; min-height: 0;
+  padding: 10px;
+  
+  background: transparent; border: none;
+  transition: opacity 0.3s;
+  
+  position: relative;
+  z-index: 20; 
+}
+
+.hand.you { order: 1; }
+.hand.ai  { order: 3; }
+.board-wrap { order: 2; }
+
+.hand.active { opacity: 1; filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.15)); pointer-events: auto; }
+.hand:not(.active) { opacity: 0.6; pointer-events: none; }
+
+/* ==========================================================================
+   CARTAS
+   ========================================================================== */
+.card {
+  width: 100%;
+  height: var(--card-h);
+  position: relative;
+  perspective: 1000px;
+  cursor: grab;
+  touch-action: none;
+  transform: scale(0.95);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  margin: 0 !important;
+}
+
+.card:active { cursor: grabbing; }
+.card.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.8); }
+
+/* Hover inteligente */
+.hand .card:not(.disabled):hover, .hand .card.selected {
+  transform: scale(1.08); 
+  z-index: 100;
+  border-color: var(--accent);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.card-inner {
+  position: absolute; inset: 0;
+  transition: transform 0.4s; transform-style: preserve-3d;
+}
+.card.flipped .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  border-radius: 8px; overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  border: 1px solid #2a3447;
+}
+.card-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.card-face.front { z-index: 2; }
+
+.card-face.back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #182848, #0a1220);
+  border: 2px solid #3b5c8c;
+}
+
+.card.owner-you .card-face.front::after { content: ""; position: absolute; inset: 0; border: 3px solid var(--you); border-radius: 8px; box-shadow: inset 0 0 10px rgba(74,222,128,0.3); }
+.card.owner-ai .card-face.front::after  { content: ""; position: absolute; inset: 0; border: 3px solid var(--ai); border-radius: 8px; box-shadow: inset 0 0 10px rgba(248,113,113,0.3); }
+
+.card.drag-origin-dim { opacity: 0.3 !important; }
+
+/* ==========================================================================
+   PIPS E EFEITOS
+   ========================================================================== */
+.tile-card { position: absolute; inset: 2px; border-radius: 6px; overflow: hidden; }
+.tile-card img { width: 100%; height: 100%; object-fit: cover; }
+
+.tile-card.owner-you::before { content:""; position:absolute; inset:0; background: rgba(74,222,128,0.15); z-index:1; }
+.tile-card.owner-ai::before  { content:""; position:absolute; inset:0; background: rgba(248,113,113,0.15); z-index:1; }
+.tile-card.owner-you::after { content: ""; position: absolute; inset: 0; border: 2px solid var(--you); border-radius: 6px; box-shadow: 0 0 15px rgba(74,222,128,0.4); }
+.tile-card.owner-ai::after { content: ""; position: absolute; inset: 0; border: 2px solid var(--ai); border-radius: 6px; box-shadow: 0 0 15px rgba(248,113,113,0.4); }
+
+.stats-central { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+.stats-central .pip {
+  position: absolute; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px;
+  background: rgba(10, 10, 10, 0.75); backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff; text-shadow: 0 1px 2px #000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.stats-central .pip.T { top: 5px; left: 50%; transform: translateX(-50%); }
+.stats-central .pip.R { top: 50%; right: 5px; transform: translateY(-50%); }
+.stats-central .pip.B { bottom: 5px; left: 50%; transform: translateX(-50%); }
+.stats-central .pip.L { top: 50%; left: 5px; transform: translateY(-50%); }
+
+.flip-anim { animation: flipX 0.4s ease; }
+@keyframes flipX { 0% {transform: rotateY(0)} 50% {transform: rotateY(90deg)} 100% {transform: rotateY(0)} }
+
+/* ==========================================================================
+   MODAIS E DRAWER
+   ========================================================================== */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 70; }
+.overlay.hidden { display: none; }
+
+.drawer {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: 400px; max-width: 85vw;
+  background: #0f1824; border-left: 1px solid #27476f;
+  transform: translateX(100%); transition: transform 0.3s;
+  z-index: 80; display: flex; flex-direction: column;
+}
+.drawer.open { transform: translateX(0); }
+.drawer.hidden { display: none; }
+.drawer-header { padding: 16px; border-bottom: 1px solid #1e2a3f; display: flex; justify-content: space-between; align-items: center; }
+.drawer-content { overflow-y: auto; padding: 16px; }
+.drawer-content .col { margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
+.drawer-footer { padding: 16px; border-top: 1px solid #1e2a3f; display: flex; justify-content: flex-end; }
+.btn.icon { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+.btn.primary { background: var(--you); color: #003315; padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+
+.win-banner {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 90; visibility: hidden; opacity: 0; transition: opacity 0.3s;
+}
+.win-banner.show { visibility: visible; opacity: 1; }
+.win-banner .box {
+  background: #111e2f; padding: 24px; border-radius: 16px; border: 1px solid #2c4c78; text-align: center;
+}
+.win-banner .box h2 {
+  margin-top: 0;      /* Remove o espaço do topo */
+  margin-bottom: 10px; /* Ajusta o espaço de baixo para não colar no texto */
+  font-size: 24px;
+  color: #fff;
+}
+
+.win-banner .actions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+
+.debug-panel { position: fixed; right: 10px; bottom: 10px; width: 300px; max-height: 40vh; background: #0b1828; border: 1px solid #27476f; z-index: 60; border-radius: 8px; display: flex; flex-direction: column; }
+.debug-panel.hidden { display: none; }
+.debug-panel .dbg-log { overflow-y: auto; padding: 8px; font-size: 11px; color: #a0aec0; }
+
+/* ==========================================================================
+   MEDIA QUERIES
+   ========================================================================== */
+
+/* 1. Mobile Geral (< 900px) */
+@media (max-width: 900px) {
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 0;
+    overflow: visible; background: transparent; border: none; pointer-events: none;
+  }
+  .tb-left, .status-line, .topbar .btn.small { display: none; }
+  .tb-right { pointer-events: auto; position: absolute; top: 10px; right: 15px; }
+
+  .center-wrap {
+    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(11, 24, 40, 0.95);
+    padding: 6px 16px; border-radius: 99px;
+    z-index: 60; border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    width: max-content;
+  }
+  .scoreline .pill { padding: 4px 10px; font-size: 12px; }
+  .layout { padding: 0; top: 0; width: 100vw; height: 100dvh; }
+  .rule-banner { top: 10px; }
+  
+  /* Ajuste de Botões lado a lado no Deck Builder Mobile */
+  .deck-actions {
+    width: 100%;
+    flex-direction: row; /* Mantém na horizontal */
+    gap: 10px;
+  }
+  .deck-actions .btn {
+    flex: 1; /* Divide o espaço igualmente */
+    width: auto;
+  }
+}
+
+/* 2. Mobile Portrait (Em pé) */
+@media (max-width: 600px) and (orientation: portrait) {
+  :root {
+    --card-h: 15vh; 
+    --gap: 0.5vh;
+  }
+
+  .layout { flex-direction: column; justify-content: center; gap: 2vh; }
+
+  .hand {
+    display: flex; flex-direction: row;
+    width: 100%; height: var(--card-h);
+    padding: 0 10px; gap: 0;
+    justify-content: center; overflow: visible;
+  }
+
+  .hand.ai { order: 1; margin-bottom: 0; }
+  .board-wrap { order: 2; }
+  .hand.you { order: 3; margin-top: 0; }
+
+  .hand .card {
+    width: var(--card-w);
+    margin: 0 -8px !important;
+    transform: scale(1);
+  }
+  
+  .hand .card:not(.disabled):hover, .hand .card.selected {
+    transform: translateY(-20px) scale(1.15);
+    margin: 0 5px !important;
+    z-index: 100;
+  }
+  
+  .board { padding: 4px; border-radius: 12px; }
+}
+
+/* 3. Mobile Landscape (Deitado) */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root { --card-h: 27vh; --gap: 0.5vh; }
+
+  .layout { flex-direction: row; gap: 1vw; padding: 0 5vw; }
+
+  .hand {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px; padding: 0;
+    width: calc((var(--card-w) * 2) + 10px);
+  }
+  
+  .hand .card { transform: scale(0.9); margin: 0 !important; }
+  
+  .hand .card:hover, .hand .card.selected { transform: scale(1.05); z-index: 100; }
+}
+
+/* --- FIX CORES DOS PIPS --- */
+.stats-central .pip.boost {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(11, 26, 40, 0.95);
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
+  text-shadow: 0 0 5px var(--accent);
+  z-index: 10;
+}
+
+.stats-central .pip.penalty {
+  color: var(--ai);
+  border-color: var(--ai);
+  background: rgba(40, 10, 10, 0.95);
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.6);
+  text-shadow: 0 0 5px var(--ai);
+}
+
+/* --- DECK BUILDER --- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-overlay.hidden { display: none !important; }
+
+.deck-box { background: var(--panel); border: 1px solid #27476f; border-radius: 12px; width: 95%; max-width: 900px; height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+.deck-box h2 { margin: 0; padding: 15px; background: var(--panel2); border-bottom: 1px solid #1f2a3a; display: flex; justify-content: space-between; align-items: center; }
+
+/* Filtros */
+.deck-filters { padding: 10px; display: flex; gap: 15px; border-bottom: 1px solid #1f2a3a; background: #0b1117; align-items: center; }
+/* Selects mais bonitos */
+.deck-filters select { width: 60px; background: #162030; border: 1px solid #2d4566; color: white; border-radius: 4px; padding: 4px; }
+
+/* Deck Grid Ajustado (Cartas maiores) */
+.deck-grid { 
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 15px; 
+  display: grid; 
+  /* Ajuste para 80px */
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
+  grid-auto-rows: max-content; 
+  gap: 8px; 
+  align-content: start; 
+}
+
+/* Carta na lista */
+.deck-card { 
+  position: relative; 
+  cursor: pointer; 
+  border-radius: 6px; 
+  overflow: hidden; 
+  border: 2px solid transparent; 
+  transition: transform 0.1s; 
+  /* background: #000; REMOVIDO */
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  min-height: 80px;
+  display: flex;
+}
+.deck-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+.deck-card:hover { transform: scale(1.05); z-index: 10; }
+.deck-card.selected { border-color: var(--you); box-shadow: 0 0 10px var(--you); transform: scale(0.95); }
+.deck-card.selected img { opacity: 0.4; }
+.deck-card.selected::after { content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--you); text-shadow: 0 2px 4px black; font-weight: bold; z-index: 30; }
+
+.deck-card .stats-central { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+
+.deck-card .pip {
+  font-size: 14px; 
+  text-shadow: 1px 1px 2px black, 0 0 4px black;
+  font-weight: 800;
+  position: absolute; 
+  width: 20px; height: 20px; 
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  z-index: 5;
+}
+
+/* --- ÍCONES ELEMENTAIS (Unificado para Cartas e Tabuleiro) --- */
+
+.element-icon {
+  position: absolute;
+  top: 4px;      /* Posição fixa igual para ambos */
+  right: 4px;    /* Posição fixa igual para ambos */
+  width: 20px;
+  height: 20px;
+  
+  /* Visual da bolinha */
+  background: rgba(30, 30, 30, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  
+  /* Texto (Letra) */
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  z-index: 5; /* Z-index baixo (tabuleiro) */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Aumenta o Z-index se o ícone estiver DENTRO de uma carta (para ficar sobre a img) */
+.card .element-icon, .tile-card .element-icon {
+  z-index: 25; 
+}
+
+/* --- REGRA DE OCULTAÇÃO (Oculta ícone do tabuleiro se a célula não estiver vazia) --- */
+/* O ícone do tabuleiro é filho direto de .cell. O da carta é filho de .tile-card. */
+.cell:not(.empty) > .element-icon {
+  display: none;
+}
+
+
+/* --- CORES POR ELEMENTO (Mesmas de antes, atualizadas para a nova classe) --- */
+
+.element-icon[data-elem="Fire"] {
+  background: linear-gradient(135deg, #7f1d1d, #ef4444);
+  border-color: #fca5a5;
+  box-shadow: 0 0 5px #ef4444;
+}
+
+.element-icon[data-elem="Ice"] {
+  background: linear-gradient(135deg, #0e7490, #22d3ee);
+  border-color: #a5f3fc;
+  box-shadow: 0 0 5px #22d3ee;
+}
+
+.element-icon[data-elem="Thunder"] {
+  background: linear-gradient(135deg, #a16207, #eab308);
+  border-color: #fde047;
+  color: #fff;
+  box-shadow: 0 0 5px #eab308;
+}
+
+.element-icon[data-elem="Earth"] {
+  background: linear-gradient(135deg, #431407, #ea580c);
+  border-color: #fdba74;
+}
+
+.element-icon[data-elem="Poison"] {
+  background: linear-gradient(135deg, #581c87, #9333ea);
+  border-color: #d8b4fe;
+  box-shadow: 0 0 5px #9333ea;
+}
+
+.element-icon[data-elem="Wind"] {
+  background: linear-gradient(135deg, #064e3b, #10b981);
+  border-color: #6ee7b7;
+}
+
+.element-icon[data-elem="Water"] {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  border-color: #93c5fd;
+}
+
+.element-icon[data-elem="Holy"] {
+  background: linear-gradient(135deg, #9ca3af, #f3f4f6);
+  border-color: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 0 8px #ffffff;
+}
+
+.deck-card .pip.T { top: 4px; left: 50%; transform: translateX(-50%); }
+.deck-card .pip.R { top: 50%; right: 4px; transform: translateY(-50%); }
+.deck-card .pip.B { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.deck-card .pip.L { top: 50%; left: 4px; transform: translateY(-50%); }
+
+.deck-footer { padding: 10px 20px; background: var(--panel2); border-top: 1px solid #1f2a3a; display: flex; justify-content: space-between; align-items: center; }
+.deck-preview { display: flex; gap: 5px; height: 60px; }
+.deck-preview img { height: 100%; border-radius: 4px; border: 1px solid #444; }
+
+.deck-actions { display: flex; gap: 10px; align-items: center; }
+#btn-random-deck { background: rgba(96, 165, 250, 0.2); border-color: rgba(96, 165, 250, 0.4); }
+#btn-random-deck:hover { background: rgba(96, 165, 250, 0.4); }
+
+@media (max-width: 600px) {
+  .deck-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); } /* Mantém 80px no mobile tb */
+  .deck-footer { flex-direction: column; gap: 10px; height: auto; }
+}
