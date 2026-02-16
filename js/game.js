@@ -903,4 +903,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Expose helpers for DragWithin
   window.playCard = playCard;
 });
-```
