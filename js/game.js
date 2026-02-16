@@ -809,25 +809,6 @@ function endGame() {
   AudioManager.play(sfx);
 }
 
-// Hook chamado pelo Matchmaking quando a partida reinicia
-state.matchmaking.game = {
-  ...state.matchmaking.game,
-  isGameOver: () => isGameOver(),
-  onRematchStart: (data) => {
-    $("#result-modal").classList.remove("show");
-    setupOnlineGame(data, state.matchmaking.playerId === 'host');
-  },
-  triggerRematchSetup: () => {
-    const newData = generateInitialData();
-    state.matchmaking.resetMatch(newData);
-  },
-  remotePlaceCard: (move) => {
-    // ... (existing logic)
-    // Redefinindo aqui para garantir o escopo correto, ou melhor, 
-    // deveríamos ter definido isso na inicialização.
-    // Vamos manter a definição original na inicialização e apenas adicionar os novos métodos.
-  }
-};
 
 // Apenas adicionando os novos métodos ao objeto game do matchmaking
 Object.assign(state.matchmaking.game, {
