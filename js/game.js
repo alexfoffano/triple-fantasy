@@ -767,16 +767,80 @@ function endGame() {
   const you = state.yourHand.length + state.board.filter(s => s && s.owner === 'you').length;
   const diff = you - ai;
   let msg, sfx;
-  if (state.aiLevel === "off") {
+  if (state.aiLevel === "off" && !state.isOnline) {
     if (diff > 0) { msg = "Jogador 1 Venceu!"; sfx = "win"; } else if (diff < 0) { msg = "Jogador 2 Venceu!"; sfx = "win"; } else { msg = "Empate!"; sfx = "draw"; }
   } else {
     if (diff > 0) { msg = "Você Venceu!"; sfx = "win"; } else if (diff < 0) { msg = "Você Perdeu."; sfx = "lose"; } else { msg = "Empate!"; sfx = "draw"; }
   }
   $("#result-title").textContent = msg;
   $("#result-detail").textContent = `Placar Final: ${you} x ${ai}`;
+
+  // ONLINE: Botões diferentes
+  if (state.isOnline) {
+    // Remove botões antigos para não duplicar listeners
+    const actions = document.querySelector("#result-modal .actions");
+    actions.innerHTML = `
+           <button id="btn-rematch" class="btn primary">Jogar Novamente</button>
+           <button id="btn-exit" class="btn small">Sair</button>
+       `;
+
+    $("#btn-rematch").addEventListener("click", () => {
+      $("#btn-rematch").disabled = true;
+      $("#btn-rematch").textContent = "Aguardando oponente...";
+      state.matchmaking.requestRematch();
+    });
+
+    $("#btn-exit").addEventListener("click", () => {
+      window.location.href = window.location.pathname; // Remove query params
+    });
+  } else {
+    // OFFLINE: Restaura botões padrão se necessário
+    // (Idealmente teríamos um template HTML fixo, mas ok injetar aqui)
+    const actions = document.querySelector("#result-modal .actions");
+    actions.innerHTML = `
+        <button id="btn-again" class="btn primary">Jogar novamente</button>
+        <button id="btn-close" class="btn small">Fechar</button>
+       `;
+    $("#btn-again").addEventListener("click", () => { $("#result-modal").classList.remove("show"); openDeckBuilder(); });
+    $("#btn-close").addEventListener("click", () => { $("#result-modal").classList.remove("show"); });
+  }
+
   $("#result-modal").classList.add("show");
   AudioManager.play(sfx);
 }
+
+// Hook chamado pelo Matchmaking quando a partida reinicia
+state.matchmaking.game = {
+  ...state.matchmaking.game,
+  isGameOver: () => isGameOver(),
+  onRematchStart: (data) => {
+    $("#result-modal").classList.remove("show");
+    setupOnlineGame(data, state.matchmaking.playerId === 'host');
+  },
+  triggerRematchSetup: () => {
+    const newData = generateInitialData();
+    state.matchmaking.resetMatch(newData);
+  },
+  remotePlaceCard: (move) => {
+    // ... (existing logic)
+    // Redefinindo aqui para garantir o escopo correto, ou melhor, 
+    // deveríamos ter definido isso na inicialização.
+    // Vamos manter a definição original na inicialização e apenas adicionar os novos métodos.
+  }
+};
+
+// Apenas adicionando os novos métodos ao objeto game do matchmaking
+Object.assign(state.matchmaking.game, {
+  isGameOver: () => isGameOver(),
+  onRematchStart: (data) => {
+    $("#result-modal").classList.remove("show");
+    setupOnlineGame(data, state.matchmaking.playerId === 'host');
+  },
+  triggerRematchSetup: () => {
+    const newData = generateInitialData();
+    state.matchmaking.resetMatch(newData);
+  }
+});
 function showBanner(t) { bannerEl.textContent = t; bannerEl.classList.remove("hidden"); setTimeout(() => bannerEl.classList.add("hidden"), 1200); }
 
 /* --- AI --- */

@@ -96,20 +96,60 @@ export class Matchmaking {
         });
     }
 
+    // Solicita revanche
+    async requestRematch() {
+        if (!this.roomId) return;
+        const roomRef = doc(db, "matches", this.roomId);
+        const field = this.playerId === 'host' ? 'hostRematch' : 'guestRematch';
+
+        await updateDoc(roomRef, {
+            [field]: true
+        });
+    }
+
+    // Reinicia a partida (Apenas Host deve chamar isso com novo estado)
+    async resetMatch(newGameState) {
+        if (!this.roomId) return;
+        const roomRef = doc(db, "matches", this.roomId);
+
+        await updateDoc(roomRef, {
+            status: 'playing',
+            turn: newGameState.turn,
+            board: Array(9).fill(null),
+            boardElements: newGameState.boardElements,
+            hostHand: newGameState.hostHand,
+            guestHand: newGameState.guestHand,
+            lastMove: null,
+            hostRematch: false,
+            guestRematch: false
+        });
+    }
+
     // Trata as atualizações recebidas
     handleRoomUpdate(data) {
         // 1. Verificar conexão do oponente
         if (this.playerId === 'host' && data.guestConnected && data.status === 'playing') {
-            // Oponente conectou! Notificar UI/Jogo
-            // TODO: Disparar evento de "Oponente Encontrado"
-            console.log("Oponente conectado!");
+            // Logic handled in game.js via hook
         }
 
-        // 2. Verificar se houve jogada do oponente
-        // Se for minha vez, significa que o oponente jogou e passou a vez pra mim
+        // 2. Verificar Remoção de Sala ou Reset
+        if (data.status === 'playing' &&
+            data.hostRematch === false &&
+            data.guestRematch === false &&
+            this.game.isGameOver()) {
+            // Detecta que o jogo reiniciou (estava gameover, agora está playing e sem flags de rematch)
+            this.game.onRematchStart(data);
+            return;
+        }
+
+        // 3. Verificar Pedido de Revanche do Oponente
+        if (this.playerId === 'host' && data.hostRematch && data.guestRematch) {
+            // Ambos aceitaram! Host gera novo estado e reinicia
+            this.game.triggerRematchSetup();
+        }
+
+        // 4. Verificar jogada
         if (data.turn === this.playerId) {
-            // Verificar se o tabuleiro local está diferente do remoto
-            // (Simplificação: apenas pegar a última jogada se houver)
             if (data.lastMove && data.lastMove.player !== this.playerId) {
                 this.game.remotePlaceCard(data.lastMove);
             }
