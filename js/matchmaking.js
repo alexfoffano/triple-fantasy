@@ -23,7 +23,7 @@ export class Matchmaking {
     }
 
     // Cria uma nova sala
-    async createRoom() {
+    async createRoom(initialGameState) {
         console.log("Matchmaking: Gerando Room ID...");
         this.roomId = this.generateRoomId();
         this.playerId = 'host';
@@ -36,9 +36,12 @@ export class Matchmaking {
             status: 'waiting', // waiting, playing, finished
             hostConnected: true,
             guestConnected: false,
-            turn: 'host', // host começa (Blue/You)
-            board: Array(9).fill(null), // Tabuleiro vazio
-            lastMove: null // Última jogada para animação
+            turn: initialGameState.turn, // 'host' ou 'guest'
+            board: Array(9).fill(null),
+            boardElements: initialGameState.boardElements,
+            hostHand: initialGameState.hostHand,
+            guestHand: initialGameState.guestHand,
+            lastMove: null
         };
 
         console.log("Matchmaking: Salvando sala no Firestore...", this.roomId);
@@ -76,7 +79,7 @@ export class Matchmaking {
         });
 
         this.listenToRoom(this.roomId);
-        return true;
+        return docSnap.data();
     }
 
     // Escuta atualizações da sala em tempo real

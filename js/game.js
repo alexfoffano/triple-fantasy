@@ -31,10 +31,25 @@ const state = {
 state.matchmaking = new Matchmaking({
   remotePlaceCard: (move) => {
     // Recebeu jogada do oponente
-    // Atualiza a carta na mão da IA (que representa o oponente) para garantir que seja a mesma
-    if (state.aiHand[move.cardIndex]) {
-      state.aiHand[move.cardIndex] = move.card;
+    // Oponente jogando = 'ai' na minha visão
+    // Precisamos encontrar a carta certa na mão 'ai'
+    // move.cardIndex é o índice original na mão DELE.
+    // Na minha visão, state.aiHand deve estar sincronizada.
+
+    // Problema: se a carta foi removida ou a ordem mudou? 
+    // Como usamos splice, o índice muda.
+    // Mas se garantirmos determismo, a "minha" aiHand e a "yourHand" dele devem ser espelhos.
+
+    // Vamos confiar no índice por enquanto, mas garantir que a carta visualmente bata
+    // Se a carta visualmente é diferente, podemos forçar a atualização
+
+    // Atualiza a carta na mão da IA para garantir que seja a mesma que ele jogou
+    // (Caso houvesse alguma divergência de estado)
+    if (state.aiHand.length > move.cardIndex) {
+      // state.aiHand[move.cardIndex] = move.card; // Não precisamos substituir se já estiver certo
     }
+
+    console.log("Remote move received:", move);
     playCard("ai", move.cardIndex, move.boardIndex);
   }
 });
@@ -152,7 +167,9 @@ function initUI() {
       document.getElementById("lobby-modal").classList.remove("hidden");
       $("#lobby-status").textContent = "Criando sala no servidor...";
 
-      const roomId = await state.matchmaking.createRoom();
+      const initialData = generateInitialData();
+      // Salva e cria a sala com os dados gerados
+      const roomId = await state.matchmaking.createRoom(initialData);
 
       // Robust link generation (handles file:// protocol where origin is null)
       let baseUrl = window.location.href.split('?')[0];
@@ -160,6 +177,9 @@ function initUI() {
 
       $("#room-link").value = link;
       $("#lobby-status").textContent = "Aguardando oponente...";
+
+      // Configura o jogo localmente com os dados que acabamos de gerar
+      setupOnlineGame(initialData, true);
 
       // Monitorar conexão
       const checkInterval = setInterval(() => {
@@ -202,36 +222,25 @@ function initUI() {
   refreshStatusLine();
 }
 
-function startOnlineMatch(role) {
+function startOnlineMatch(role, roomData = null) {
   state.isOnline = true;
-  state.aiLevel = "off"; // Desliga IA
-  state.hideOpponent = false; // Mostra cartas (ou não? Melhor manter escondido se for competitivo)
-  // Na verdade, Triple Triad competitivo geralmente é Open Hand ou Same/Plus?
-  // Vamos deixar Open Hand por enquanto para facilitar debug, ou ler da config.
-  // O ideal é ser configurável. Vamos forçar Open Hand para testar.
+  state.aiLevel = "off";
   state.hideOpponent = false;
 
   $("#status-line").innerHTML = `Modo Online: <b>${role === 'host' ? 'Você (Azul)' : 'Você (Vermelho)'}</b>`;
 
-  // Se sou guest, minhas cartas são 'ai' (visual) ou 'you'?
-  // NÃO. Sempre sou 'you' na minha tela.
-  // O jogo espera que 'you' jogue. 
-  // Se sou host, começo. Se sou guest, espero.
+  state.firstMove = "you";
+  // A logica real de turno vem do setupOnlineGame
 
-  // Configura turno
-  state.firstMove = "you"; // Host começa
-  state.yourTurn = (role === 'host');
-
-  // Mãos
-  // Host usa o deck selecionado?
-  // Simplificação: Ambos recebem decks aleatórios por enquanto para testar rápido
-  if (state.deckSelection.length === 5) {
-    deal(state.deckSelection);
+  if (roomData) {
+    // Sou Guest (ou Host reconectando, mas por enquanto, Guest)
+    setupOnlineGame(roomData, false);
   } else {
-    deal(weightedRandomHand(5, 1, 10)); // Fallback
+    // Sou Host e já chamei setupOnlineGame antes de criar a sala
+    // Apenas garantimos a UI
+    renderAll();
+    updateActiveHandIndicator();
   }
-
-  restartGameUI();
 }
 
 /* --- DECK BUILDER --- */
@@ -343,7 +352,42 @@ function weightedRandomHand(count, min, max) {
   return out;
 }
 
+function generateInitialData() {
+  // Gera dados iniciais para uma nova partida (Hands + Elements)
+  const playerDeck = state.deckSelection.length === 5 ? state.deckSelection : weightedRandomHand(5, 1, 10);
+
+  // Hand do Host (Player 1)
+  const hostHand = playerDeck.map(c => ({ ...c }));
+  const levels = hostHand.map(c => c.level || 1);
+  const aiMin = Math.min(...levels);
+  const aiMax = Math.max(...levels);
+
+  // Hand do Guest (Player 2)
+  const guestHand = weightedRandomHand(5, aiMin, aiMax);
+
+  // Tabuleiro Elemental
+  const boardElements = Array(9).fill("None");
+  if (state.rules.elemental) {
+    const n = Math.floor(Math.random() * 6);
+    const idxs = shuffle([...Array(9).keys()]).slice(0, n);
+    for (const i of idxs) boardElements[i] = ELEMENTS[Math.floor(Math.random() * (ELEMENTS.length - 1)) + 1];
+  }
+
+  // Quem começa?
+  // No online, vamos sortear aqui e salvar no banco
+  const hostStarts = Math.random() < 0.5;
+
+  return {
+    hostHand,
+    guestHand,
+    boardElements,
+    turn: hostStarts ? 'host' : 'guest'
+  };
+}
+
 function deal(playerChoice = null) {
+  // Local (Offline) ou Host setup
+  // Mantemos a logica original para offline
   let aiMin = state.minLevel;
   let aiMax = state.maxLevel;
 
@@ -369,6 +413,33 @@ function deal(playerChoice = null) {
   state.yourTurn = (state.firstMove === "you") ? true : (state.firstMove === "ai" ? false : Math.random() < 0.5);
   state.aiStarts = !state.yourTurn;
   state.busy = false;
+}
+
+function setupOnlineGame(data, amIHost) {
+  state.board = Array(9).fill(null);
+  state.boardElements = data.boardElements || Array(9).fill("None");
+
+  // Se sou Host: Minha mão é hostHand, Oponente é guestHand
+  // Se sou Guest: Minha mão é guestHand, Oponente é hostHand
+  if (amIHost) {
+    state.yourHand = data.hostHand;
+    state.aiHand = data.guestHand;
+  } else {
+    state.yourHand = data.guestHand;
+    state.aiHand = data.hostHand;
+  }
+
+  // Turno
+  // data.turn é 'host' ou 'guest'
+  // Se data.turn == 'host' e amIHost => true
+  // Se data.turn == 'guest' e !amIHost => true
+  const myRole = amIHost ? 'host' : 'guest';
+  state.yourTurn = (data.turn === myRole);
+  state.aiStarts = !state.yourTurn;
+
+  state.busy = false;
+  renderAll();
+  updateActiveHandIndicator();
 }
 
 function restart() { openDeckBuilder(); }
@@ -904,8 +975,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#status-line").textContent = "Conectando à sala...";
 
     try {
-      await state.matchmaking.joinRoom(roomId);
-      startOnlineMatch('guest');
+      const roomData = await state.matchmaking.joinRoom(roomId);
+      // Configura o jogo com os dados recebidos do Host
+      startOnlineMatch('guest', roomData);
     } catch (e) {
       alert("Erro ao entrar na sala: " + e.message);
       openDeckBuilder();
