@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
@@ -7,19 +8,20 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" href="data:,">
 </head>
+
 <body>
 
   <header class="topbar">
     <div class="tb-left">
       <h1>Triple Triad — Protótipo</h1>
     </div>
-    
+
     <div class="tb-center">
       <div class="center-wrap">
         <div id="status-line" class="status-line">
           Carregando...
         </div>
-        
+
         <div class="scoreline" id="scorebar" aria-live="polite">
           <div class="pill you"><span id="label-you">Você</span>: <span id="score-you">5</span></div>
           <div class="pill ai"><span id="label-ai">Oponente</span>: <span id="score-ai">5</span></div>
@@ -43,7 +45,7 @@
       <button id="btn-close-drawer" class="btn icon">×</button>
     </div>
     <div class="drawer-content">
-      
+
       <div class="col">
         <label>Nível das Cartas (Min – Max)</label>
         <div style="display:flex; gap:10px; margin-top:5px;">
@@ -54,7 +56,8 @@
 
       <div class="col">
         <label>Dificuldade da IA</label>
-        <select id="ai-level" style="width:100%; margin-top:5px; padding:8px; background:#162030; color:white; border:1px solid #2d4566; border-radius:4px;">
+        <select id="ai-level"
+          style="width:100%; margin-top:5px; padding:8px; background:#162030; color:white; border:1px solid #2d4566; border-radius:4px;">
           <option value="easy">Fácil (Aleatório)</option>
           <option value="medium" selected>Médio (Normal)</option>
           <option value="hard">Difícil (Estratégico)</option>
@@ -76,13 +79,15 @@
         </div>
         <div style="margin-top:8px; border-top:1px solid #ffffff1a; padding-top:8px;">
           <label class="inline"><input type="checkbox" id="rule-samewall" checked> Same Wall</label>
-          <label class="inline" style="margin-left:10px;">Valor Wall: <input type="text" id="wall-level" value="5" size="2" style="text-align:center; background:#162030; color:white; border:none;"></label>
+          <label class="inline" style="margin-left:10px;">Valor Wall: <input type="text" id="wall-level" value="5"
+              size="2" style="text-align:center; background:#162030; color:white; border:none;"></label>
         </div>
       </div>
 
       <div class="col">
         <label>Quem começa?</label>
-        <select id="first-move" style="width:100%; margin-top:5px; padding:8px; background:#162030; color:white; border:1px solid #2d4566; border-radius:4px;">
+        <select id="first-move"
+          style="width:100%; margin-top:5px; padding:8px; background:#162030; color:white; border:1px solid #2d4566; border-radius:4px;">
           <option value="random">Aleatório (Cara ou Coroa)</option>
           <option value="you">Sempre Eu</option>
           <option value="ai">Sempre Oponente</option>
@@ -91,7 +96,8 @@
 
       <div class="col">
         <label class="inline"><input type="checkbox" id="sound-enabled" checked> Ativar sons</label>
-        <label class="inline">Volume: <input type="range" id="sound-volume" min="0" max="1" step="0.01" value="0.6"></label>
+        <label class="inline">Volume: <input type="range" id="sound-volume" min="0" max="1" step="0.01"
+            value="0.6"></label>
         <hr style="border-color:#ffffff1a; margin:10px 0;">
         <label class="inline"><input type="checkbox" id="debug-mode"> Ativar depuração</label>
         <button id="debug-clear" class="btn link" type="button">Limpar log</button>
@@ -128,30 +134,42 @@
   <div id="deck-modal" class="modal-overlay hidden">
     <div class="deck-box">
       <h2>Monte seu Deck <small>(<span id="deck-count">0</span>/5)</small></h2>
-      
+
       <div class="deck-filters">
-         <label>Nível Mín: 
-           <select id="filter-min">
-             <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-             <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-             <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-             <option value="10">10</option>
-           </select>
-         </label>
-         <label>Nível Máx: 
-           <select id="filter-max">
-             <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-             <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-             <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-             <option value="10" selected>10</option>
-           </select>
-         </label>
-         <button id="btn-filter-apply" class="btn small">Filtrar</button>
+        <label>Nível Mín:
+          <select id="filter-min">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </label>
+        <label>Nível Máx:
+          <select id="filter-max">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10" selected>10</option>
+          </select>
+        </label>
+        <button id="btn-filter-apply" class="btn small">Filtrar</button>
       </div>
 
       <div id="deck-grid" class="deck-grid">
-        </div>
-      
+      </div>
+
       <div class="deck-footer">
         <div class="deck-preview" id="deck-preview"></div>
         <div class="deck-actions">
@@ -166,8 +184,10 @@
     <div class="dbg-log" id="debug-log"></div>
   </aside>
 
+  <script type="module" src="js/firebase-config.js"></script>
   <script src="js/cards.js"></script>
   <script src="js/game.js"></script>
   <script src="js/mobile-dnd.js"></script>
 </body>
+
 </html>
