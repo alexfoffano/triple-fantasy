@@ -174,8 +174,30 @@
         <div class="deck-preview" id="deck-preview"></div>
         <div class="deck-actions">
           <button id="btn-random-deck" class="btn small">Aleatório</button>
+          <button id="btn-create-room" class="btn secondary">Jogar Online</button>
           <button id="btn-start-battle" class="btn primary" disabled>Batalhar!</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="lobby-modal" class="modal-overlay hidden">
+    <div class="box" style="max-width: 400px; text-align: center;">
+      <h2 style="color:white; margin-top:0;">Sala Criada!</h2>
+      <p style="color:#cbd5e1; margin-bottom:20px;">Envie este link para seu amigo:</p>
+
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <input type="text" id="room-link" readonly
+          style="width:100%; padding:10px; background:#0b1117; border:1px solid #2d4566; color:white; border-radius:4px;">
+        <button id="btn-copy-link" class="btn small">Copiar</button>
+      </div>
+
+      <div id="lobby-status" class="status-line" style="display:inline-block; margin-bottom:20px;">
+        Aguardando oponente...
+      </div>
+
+      <div>
+        <button id="btn-cancel-lobby" class="btn small" style="background:rgba(255,255,255,0.1);">Cancelar</button>
       </div>
     </div>
   </div>
@@ -186,7 +208,7 @@
 
   <script type="module" src="js/firebase-config.js"></script>
   <script src="js/cards.js"></script>
-  <script src="js/game.js"></script>
+  <script type="module" src="js/game.js"></script>
   <script src="js/mobile-dnd.js"></script>
 </body>
 

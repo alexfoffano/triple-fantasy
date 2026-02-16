@@ -15,8 +15,15 @@ const firebaseConfig = {
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 
-// Expõe o app globalmente para facilitar o debug se necessário,
+// Inicializa o Firestore
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+const db = getFirestore(app);
+
+// Expõe o app e o db globalmente para facilitar o debug se necessário,
 // mas o ideal é importar as funções onde precisar.
 window.firebaseApp = app;
+window.db = db;
+
+export { app, db };
 
 console.log("Firebase inicializado com sucesso!");
