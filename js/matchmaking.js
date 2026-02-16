@@ -133,7 +133,7 @@ export class Matchmaking {
         if (!this.roomId) return;
         const roomRef = doc(db, "matches", this.roomId);
         const newRoundId = Math.random().toString(36).substring(7);
-        this.roundId = newRoundId; // Atualiza no Host imediatamente
+        // this.roundId = newRoundId;  <-- REMOVIDO: Deixa o listener atualizar
 
         await updateDoc(roomRef, {
             status: 'playing',
