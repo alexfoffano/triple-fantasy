@@ -26,6 +26,7 @@ export class Matchmaking {
     async createRoom(initialGameState) {
         console.log("Matchmaking: Gerando Room ID...");
         this.roomId = this.generateRoomId();
+        this.playerId = 'host'; // Restore accidentally deleted line
         this.roundId = Math.random().toString(36).substring(7); // ID da rodada atual local
 
         const roomRef = doc(db, "matches", this.roomId);
