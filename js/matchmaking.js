@@ -26,14 +26,15 @@ export class Matchmaking {
     async createRoom(initialGameState) {
         console.log("Matchmaking: Gerando Room ID...");
         this.roomId = this.generateRoomId();
-        this.playerId = 'host';
+        this.roundId = Math.random().toString(36).substring(7); // ID da rodada atual local
 
         const roomRef = doc(db, "matches", this.roomId);
 
         // Estado inicial da partida
         const initialData = {
             createdAt: serverTimestamp(),
-            status: 'waiting', // waiting, playing, finished
+            status: 'waiting',
+            roundId: this.roundId, // ID da rodada atual no servidor
             hostConnected: true,
             guestConnected: false,
             turn: initialGameState.turn, // 'host' ou 'guest'
@@ -71,6 +72,8 @@ export class Matchmaking {
         if (docSnap.data().status !== 'waiting' && docSnap.data().status !== 'playing') {
             throw new Error("Esta sala já foi fechada ou a partida acabou.");
         }
+
+        this.roundId = docSnap.data().roundId; // Sincroniza roundId
 
         // Atualiza status para playing
         await updateDoc(roomRef, {
@@ -128,9 +131,12 @@ export class Matchmaking {
     async resetMatch(newGameState) {
         if (!this.roomId) return;
         const roomRef = doc(db, "matches", this.roomId);
+        const newRoundId = Math.random().toString(36).substring(7);
+        this.roundId = newRoundId; // Atualiza no Host imediatamente
 
         await updateDoc(roomRef, {
             status: 'playing',
+            roundId: newRoundId, // Define nova rodada no servidor
             turn: newGameState.turn,
             board: Array(9).fill(null),
             boardElements: newGameState.boardElements,
@@ -150,12 +156,13 @@ export class Matchmaking {
         }
 
         // 2. Verificar Remoção de Sala ou Reset
+        // 2. Verificar Remoção de Sala ou Reset (via Round ID)
         if (data.status === 'playing' &&
-            data.hostRematch === false &&
-            data.guestRematch === false &&
-            this.game.isGameOver()) {
-            // Detecta que o jogo reiniciou (estava gameover, agora está playing e sem flags de rematch)
-            this.game.onRematchStart(data);
+            data.roundId && data.roundId !== this.roundId) {
+
+            // Detectou que o servidor está numa rodada NOVA
+            this.roundId = data.roundId; // Atualiza ID local
+            this.game.onRematchStart(data); // Inicia nova partida
             return;
         }
 
