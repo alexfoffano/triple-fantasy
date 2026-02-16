@@ -199,10 +199,18 @@ function initUI() {
       const originalHandle = state.matchmaking.handleRoomUpdate.bind(state.matchmaking);
       state.matchmaking.handleRoomUpdate = (data) => {
         originalHandle(data);
+
+        console.log("Hook handleRoomUpdate:", data); // Debug
+
         if (data.guestConnected && state.matchmaking.playerId === 'host') {
-          // Oponente entrou!
-          document.getElementById("lobby-modal").classList.add("hidden");
-          startOnlineMatch('host');
+          // Verifica se já não estamos jogando para evitar restart visual
+          // O modal estar visível é um bom indicador de que ainda estamos no lobby
+          const lobby = document.getElementById("lobby-modal");
+          if (!lobby.classList.contains("hidden")) {
+            console.log("Oponente detectado! Iniciando partida...");
+            lobby.classList.add("hidden");
+            startOnlineMatch('host');
+          }
         }
       };
     } catch (e) {
