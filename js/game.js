@@ -135,7 +135,7 @@ function initUI() {
     const deck = weightedRandomHand(5, 1, 10);
     deal(deck); // Local quick play uses deal()
     showScreen("screen-game");
-    restartGameUI();
+    resetLocalBoard();
   });
 
   $("#btn-back-main-1").addEventListener("click", () => showScreen("screen-main"));
@@ -186,8 +186,6 @@ function initUI() {
   $("#sound-enabled").addEventListener("change", e => state.soundEnabled = e.target.checked);
 
   // Deck Builder
-  $("#btn-filter-apply").addEventListener("click", () => renderDeckGrid());
-
   $("#btn-start-battle").addEventListener("click", () => {
     startBattleWithSelection();
   });
@@ -196,18 +194,6 @@ function initUI() {
     startRandomBattle();
   });
 
-  const changeLvl = (isMax, val) => {
-    val = Math.max(1, Math.min(10, parseInt(val) || 1));
-    if (isMax) { state.maxLevel = val; if (state.minLevel > val) state.minLevel = val; }
-    else { state.minLevel = val; if (state.maxLevel < val) state.maxLevel = val; }
-    $("#min-level").value = state.minLevel; $("#max-level").value = state.maxLevel;
-    $("#filter-min").value = state.minLevel;
-    $("#filter-max").value = state.maxLevel;
-    openDeckBuilder();
-    refreshStatusLine();
-  };
-  $("#max-level").addEventListener("change", e => changeLvl(true, e.target.value));
-  $("#min-level").addEventListener("change", e => changeLvl(false, e.target.value));
   $("#wall-level").addEventListener("change", e => { let v = e.target.value; if (v === "A" || v === "a") v = "10"; state.wallLevel = parseInt(v) || 5; refreshStatusLine(); });
 
   $("#first-move").addEventListener("change", e => { state.firstMove = e.target.value; });
@@ -410,7 +396,7 @@ function startBattleWithSelection() {
     // Local selected deck creation
     deal(state.deckSelection);
     showScreen("screen-game");
-    restartGameUI();
+    resetLocalBoard();
   }
 }
 
@@ -424,7 +410,7 @@ function startRandomBattle() {
   } else {
     deal(randomDeck);
     showScreen("screen-game");
-    restartGameUI();
+    resetLocalBoard();
   }
 }
 
@@ -547,10 +533,29 @@ function setupOnlineGame(data, amIHost) {
   updateActiveHandIndicator();
 }
 
-function restart() { openDeckBuilder(); }
+function restart() {
+  showScreen("screen-rules-local");
+}
 
-function restartGameUI() {
-  renderAll(); updateActiveHandIndicator(); updateHandInteractivity();
+function resetLocalBoard() {
+  state.board = Array(9).fill(null);
+
+  // Tabuleiro Elemental
+  state.boardElements = Array(9).fill("None");
+  if (state.rules.elemental) {
+    const n = Math.floor(Math.random() * 6);
+    const idxs = shuffle([...Array(9).keys()]).slice(0, n);
+    for (const i of idxs) state.boardElements[i] = ELEMENTS[Math.floor(Math.random() * (ELEMENTS.length - 1)) + 1];
+  }
+
+  state.yourTurn = (state.firstMove === "you") ? true : (state.firstMove === "ai" ? false : Math.random() < 0.5);
+  state.aiStarts = !state.yourTurn;
+  state.busy = false;
+
+  renderAll();
+  updateActiveHandIndicator();
+  updateHandInteractivity();
+
   const hideCk = $("#hide-opponent");
   if (state.aiLevel === "off") { state.hideOpponent = false; if (hideCk) { hideCk.checked = false; hideCk.disabled = true; } }
   else { if (hideCk) hideCk.disabled = false; }
@@ -1121,27 +1126,31 @@ async function aiPlay() {
 document.addEventListener("DOMContentLoaded", async () => {
   initUI();
 
+  // Explicitly listen for mobile-dnd event in case window.playCard gets shadowed
+  document.addEventListener('tt:playCard', (e) => {
+    const { owner, hindex, cindex } = e.detail;
+    playCard(owner, hindex, cindex);
+  });
+
   // Check URL for room
   const urlParams = new URLSearchParams(window.location.search);
   const roomId = urlParams.get('room');
   if (roomId) {
     console.log("Tentando entrar na sala:", roomId);
-    // Esconde deck builder inicial
-    document.getElementById("deck-modal").classList.add("hidden");
-    $("#status-line").textContent = "Conectando à sala...";
+    showScreen("screen-lobby");
+    $("#lobby-status").textContent = "Conectando à sala...";
 
     try {
       const roomData = await state.matchmaking.joinRoom(roomId);
-      // Configura o jogo com os dados recebidos do Host
       startOnlineMatch('guest', roomData);
     } catch (e) {
       alert("Erro ao entrar na sala: " + e.message);
-      openDeckBuilder();
+      showScreen("screen-main");
     }
   } else {
-    openDeckBuilder();
+    showScreen("screen-main");
   }
 
-  // Expose helpers for DragWithin
+  // Expose helpers for DragWithin just in case
   window.playCard = playCard;
 });
