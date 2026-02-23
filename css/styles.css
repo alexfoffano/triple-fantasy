@@ -1162,3 +1162,197 @@ body {
   border: 1px solid #2c4c78;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
+
+/* ==========================================================================
+   SCREENS & UI COMPONENTS (V18 Refactor)
+   ========================================================================== */
+.screen {
+  display: none;
+  width: 100vw;
+  height: 100dvh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle at 50% 10%, #132235, #0b1117);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* Game screen needs to stay as block/static because layout is inside it */
+#screen-game {
+  background: none;
+}
+
+#screen-game.active {
+  display: block;
+}
+
+/* Main Menu */
+.main-menu-box {
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.game-title {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(to bottom, #fff, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 40px;
+  letter-spacing: -1px;
+  text-shadow: 0 10px 30px rgba(96, 165, 250, 0.3);
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 300px;
+  margin: 0 auto;
+}
+
+.btn.large {
+  padding: 16px 24px;
+  font-size: 1.1rem;
+  border-radius: 12px;
+}
+
+/* Rules Setup Boxes */
+.rules-box {
+  background: rgba(15, 23, 34, 0.95);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease-out;
+}
+
+.rules-box h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.rules-grid .col.full-width {
+  grid-column: 1 / -1;
+}
+
+.rules-grid label {
+  display: block;
+  font-size: 0.9rem;
+  color: #a0aec0;
+  font-weight: 600;
+}
+
+.toggles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* Styled Inputs */
+.styled-select,
+.styled-input {
+  width: 100%;
+  margin-top: 5px;
+  padding: 10px;
+  background: #162030;
+  color: white;
+  border: 1px solid #2d4566;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.styled-select:focus,
+.styled-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.styled-input.small {
+  width: 60px;
+  text-align: center;
+  padding: 6px;
+}
+
+/* Utils */
+.mt-20 {
+  margin-top: 20px;
+}
+
+.center {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Deck UI Reset for Screen */
+#screen-deck {
+  background: radial-gradient(circle at 50% 10%, #132235, #0b1117);
+}
+
+.deck-screen .deck-box {
+  max-height: 90vh;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.deck-range-info {
+  background: rgba(96, 165, 250, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.deck-range-info strong {
+  color: #60a5fa;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .rules-grid {
+    grid-template-columns: 1fr;
+  }
+}

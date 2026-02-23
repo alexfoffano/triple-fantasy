@@ -4,191 +4,151 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Triple Triad — Protótipo</title>
+  <title>Triple Fantasy</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" href="data:,">
 </head>
 
 <body>
 
-  <header class="topbar">
-    <div class="tb-left">
-      <h1>Triple Triad — Protótipo</h1>
-    </div>
-
-    <div class="tb-center">
-      <div class="center-wrap">
-        <div id="status-line" class="status-line">
-          Carregando...
-        </div>
-
-        <div class="scoreline" id="scorebar" aria-live="polite">
-          <div class="pill you"><span id="label-you">Você</span>: <span id="score-you">5</span></div>
-          <div class="pill ai"><span id="label-ai">Oponente</span>: <span id="score-ai">5</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="tb-right">
-      <button id="btn-restart" class="btn small">Reiniciar</button>
-      <button id="btn-menu" class="hamburger" aria-label="Abrir menu" title="Menu">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </header>
-
-  <div id="overlay" class="overlay hidden"></div>
-
-  <aside id="drawer" class="drawer hidden">
-    <div class="drawer-header">
-      <h2>Configurações</h2>
-      <button id="btn-close-drawer" class="btn icon">×</button>
-    </div>
-    <div class="drawer-content">
-
-      <div class="col">
-        <label>Nível das Cartas (Min – Max)</label>
-        <div style="display:flex; gap:10px; margin-top:5px;">
-          <input type="number" id="min-level" min="1" max="10" value="1" style="width:100%">
-          <input type="number" id="max-level" min="1" max="10" value="10" style="width:100%">
-        </div>
-      </div>
-
-      <div class="col">
-        <label>Dificuldade da IA</label>
-        <select id="ai-level"
-          style="width:100%; margin-top:5px; padding:8px; background:#162030; color:white; border:1px solid #2d4566; border-radius:4px;">
-          <option value="easy">Fácil (Aleatório)</option>
-          <option value="medium" selected>Médio (Normal)</option>
-          <option value="hard">Difícil (Estratégico)</option>
-          <option value="master">Mestre (Minimax)</option>
-          <option value="off">Desligado (2 Jogadores)</option>
-        </select>
-        <div style="margin-top:8px;">
-          <label class="inline"><input type="checkbox" id="hide-opponent" checked> Esconder cartas da IA</label>
-        </div>
-      </div>
-
-      <div class="col">
-        <label>Regras Ativas</label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:5px;">
-          <label class="inline"><input type="checkbox" id="rule-same" checked> Same</label>
-          <label class="inline"><input type="checkbox" id="rule-plus" checked> Plus</label>
-          <label class="inline"><input type="checkbox" id="rule-combo" checked> Combo</label>
-          <label class="inline"><input type="checkbox" id="rule-elemental" checked> Elemental</label>
-        </div>
-        <div style="margin-top:8px; border-top:1px solid #ffffff1a; padding-top:8px;">
-          <label class="inline"><input type="checkbox" id="rule-samewall" checked> Same Wall</label>
-          <label class="inline" style="margin-left:10px;">Valor Wall: <input type="text" id="wall-level" value="5"
-              size="2" style="text-align:center; background:#162030; color:white; border:none;"></label>
-        </div>
-      </div>
-
-      <div class="col">
-        <label>Quem começa?</label>
-        <select id="first-move"
-          style="width:100%; margin-top:5px; padding:8px; background:#162030; color:white; border:1px solid #2d4566; border-radius:4px;">
-          <option value="random">Aleatório (Cara ou Coroa)</option>
-          <option value="you">Sempre Eu</option>
-          <option value="ai">Sempre Oponente</option>
-        </select>
-      </div>
-
-      <div class="col">
-        <label class="inline"><input type="checkbox" id="sound-enabled" checked> Ativar sons</label>
-        <label class="inline">Volume: <input type="range" id="sound-volume" min="0" max="1" step="0.01"
-            value="0.6"></label>
-        <hr style="border-color:#ffffff1a; margin:10px 0;">
-        <label class="inline"><input type="checkbox" id="debug-mode"> Ativar depuração</label>
-        <button id="debug-clear" class="btn link" type="button">Limpar log</button>
-      </div>
-
-    </div>
-    <div class="drawer-footer">
-      <button id="drawer-restart" class="btn primary">Reiniciar Partida</button>
-    </div>
-  </aside>
-
-  <main class="layout">
-    <div class="hand you" id="hand-you"></div>
-
-    <div class="board-wrap">
-      <div id="rule-banner" class="rule-banner hidden">SAME</div>
-      <div id="board" class="board" aria-label="Tabuleiro 3x3"></div>
-    </div>
-
-    <div class="hand ai" id="hand-ai"></div>
-  </main>
-
-  <div id="result-modal" class="win-banner">
-    <div class="box">
-      <h2 id="result-title">Resultado</h2>
-      <p id="result-detail"></p>
-      <div class="actions">
-        <button id="btn-again" class="btn primary">Jogar novamente</button>
-        <button id="btn-close" class="btn small">Fechar</button>
+  <!-- ==========================================
+       SCREEN: MAIN MENU
+       ========================================== -->
+  <div id="screen-main" class="screen active">
+    <div class="main-menu-box">
+      <h1 class="game-title">Triple Fantasy</h1>
+      <div class="menu-buttons">
+        <button id="btn-nav-local" class="btn primary large">Jogar</button>
+        <button id="btn-nav-quick" class="btn secondary large">Jogo rápido</button>
+        <button id="btn-nav-online" class="btn secondary large">Jogar online</button>
       </div>
     </div>
   </div>
 
-  <div id="deck-modal" class="modal-overlay hidden">
-    <div class="deck-box">
-      <h2>Monte seu Deck <small>(<span id="deck-count">0</span>/5)</small></h2>
+  <!-- ==========================================
+       SCREEN: RULES - LOCAL
+       ========================================== -->
+  <div id="screen-rules-local" class="screen">
+    <div class="rules-box">
+      <h2>Regras da Partida</h2>
 
-      <div class="deck-filters">
-        <label>Nível Mín:
-          <select id="filter-min">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
+      <div class="rules-grid">
+        <div class="col">
+          <label>Dificuldade da IA</label>
+          <select id="ai-level" class="styled-select">
+            <option value="easy">Fácil (Aleatório)</option>
+            <option value="medium" selected>Médio (Normal)</option>
+            <option value="hard">Difícil (Estratégico)</option>
+            <option value="master">Mestre (Minimax)</option>
+            <option value="off">Desligado (2 Jogadores)</option>
           </select>
-        </label>
-        <label>Nível Máx:
-          <select id="filter-max">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10" selected>10</option>
-          </select>
-        </label>
-        <button id="btn-filter-apply" class="btn small">Filtrar</button>
-      </div>
-
-      <div id="deck-grid" class="deck-grid">
-      </div>
-
-      <div class="deck-footer">
-        <div class="deck-preview" id="deck-preview"></div>
-        <div class="deck-actions">
-          <button id="btn-random-deck" class="btn small">Aleatório</button>
-          <button id="btn-create-room" class="btn secondary">Jogar Online</button>
-          <button id="btn-start-battle" class="btn primary" disabled>Batalhar!</button>
+          <div style="margin-top:8px;">
+            <label class="inline"><input type="checkbox" id="hide-opponent" checked> Esconder cartas da IA</label>
+          </div>
         </div>
+
+        <div class="col">
+          <label>Quem começa?</label>
+          <select id="first-move" class="styled-select">
+            <option value="random">Aleatório (Cara ou Coroa)</option>
+            <option value="you">Sempre Eu</option>
+            <option value="ai">Sempre Oponente</option>
+          </select>
+        </div>
+
+        <div class="col full-width">
+          <label>Regras Ativas</label>
+          <div class="toggles-grid">
+            <label class="inline"><input type="checkbox" id="rule-same" checked> Same</label>
+            <label class="inline"><input type="checkbox" id="rule-plus" checked> Plus</label>
+            <label class="inline"><input type="checkbox" id="rule-combo" checked> Combo</label>
+            <label class="inline"><input type="checkbox" id="rule-elemental" checked> Elemental</label>
+            <label class="inline"><input type="checkbox" id="rule-samewall" checked> Same Wall</label>
+          </div>
+          <div style="margin-top:8px; border-top:1px solid #ffffff1a; padding-top:8px;">
+            <label class="inline">Valor das Bordas (Wall): <input type="number" id="wall-level" value="5" min="1"
+                max="10" class="styled-input small"></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions center mt-20">
+        <button id="btn-back-main-1" class="btn small">Voltar</button>
+        <button id="btn-continue-local" class="btn primary">Continuar</button>
       </div>
     </div>
   </div>
 
-  <div id="lobby-modal" class="modal-overlay hidden">
+  <!-- ==========================================
+       SCREEN: RULES - ONLINE
+       ========================================== -->
+  <div id="screen-rules-online" class="screen">
+    <div class="rules-box">
+      <h2>Regras - Online</h2>
+
+      <div class="rules-grid">
+        <div class="col full-width">
+          <label>Nível das Cartas (Min – Max)</label>
+          <div style="display:flex; gap:10px; margin-top:5px;">
+            <input type="number" id="online-min-level" min="1" max="10" value="1" class="styled-input">
+            <input type="number" id="online-max-level" min="1" max="10" value="10" class="styled-input">
+          </div>
+        </div>
+
+        <div class="col">
+          <label>Cartas Aleatórias?</label>
+          <select id="online-random-cards" class="styled-select">
+            <option value="yes">Sim (Sorteio Direto)</option>
+            <option value="no" selected>Não (Escolher Deck)</option>
+          </select>
+        </div>
+
+        <div class="col">
+          <label>Quem começa?</label>
+          <select id="online-first-move" class="styled-select">
+            <option value="random">Aleatório (Cara ou Coroa)</option>
+            <option value="you">Eu (Criador da sala)</option>
+            <option value="ai">Oponente</option>
+          </select>
+        </div>
+
+        <div class="col full-width">
+          <label>Regras Ativas</label>
+          <div class="toggles-grid">
+            <label class="inline"><input type="checkbox" id="online-rule-same" checked> Same</label>
+            <label class="inline"><input type="checkbox" id="online-rule-plus" checked> Plus</label>
+            <label class="inline"><input type="checkbox" id="online-rule-combo" checked> Combo</label>
+            <label class="inline"><input type="checkbox" id="online-rule-elemental" checked> Elemental</label>
+            <label class="inline"><input type="checkbox" id="online-rule-samewall" checked> Same Wall</label>
+          </div>
+          <div style="margin-top:8px; border-top:1px solid #ffffff1a; padding-top:8px;">
+            <label class="inline">Valor das Bordas (Wall): <input type="number" id="online-wall-level" value="5" min="1"
+                max="10" class="styled-input small"></label>
+          </div>
+          <div style="margin-top:8px;">
+            <label class="inline"><input type="checkbox" id="online-hide-opponent" checked> Esconder mão do
+              oponente</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions center mt-20">
+        <button id="btn-back-main-2" class="btn small">Voltar</button>
+        <button id="btn-continue-online" class="btn primary">Criar Sala</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SCREEN: LOBBY
+       ========================================== -->
+  <div id="screen-lobby" class="screen">
     <div class="box" style="max-width: 400px; text-align: center;">
       <h2 style="color:white; margin-top:0;">Sala Criada!</h2>
       <p style="color:#cbd5e1; margin-bottom:20px;">Envie este link para seu amigo:</p>
 
       <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <input type="text" id="room-link" readonly
-          style="width:100%; padding:10px; background:#0b1117; border:1px solid #2d4566; color:white; border-radius:4px;">
+        <input type="text" id="room-link" readonly class="styled-input" style="width:100%;">
         <button id="btn-copy-link" class="btn small">Copiar</button>
       </div>
 
@@ -198,6 +158,85 @@
 
       <div>
         <button id="btn-cancel-lobby" class="btn small" style="background:rgba(255,255,255,0.1);">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SCREEN: DECK BUILDER
+       ========================================== -->
+  <div id="screen-deck" class="screen deck-screen">
+    <div class="deck-box">
+      <h2>Montar Deck <small>(<span id="deck-count">0</span>/5)</small></h2>
+
+      <div class="deck-filters deck-range-info">
+        <span>Cartas permitidas: Nível <strong id="lbl-min-level">1</strong> a <strong
+            id="lbl-max-level">10</strong></span>
+      </div>
+
+      <div id="deck-grid" class="deck-grid">
+        <!-- Cartas renderizadas via JS -->
+      </div>
+
+      <div class="deck-footer">
+        <div class="deck-preview" id="deck-preview"></div>
+        <div class="deck-actions">
+          <button id="btn-back-rules" class="btn small">Voltar</button>
+          <button id="btn-random-deck" class="btn small">Aleatório</button>
+          <button id="btn-start-battle" class="btn primary" disabled>Começar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SCREEN: GAME
+       ========================================== -->
+  <div id="screen-game" class="screen game-screen">
+    <header class="topbar">
+      <div class="tb-left">
+        <button id="btn-quit-game" class="btn small">Sair</button>
+      </div>
+
+      <div class="tb-center">
+        <div class="center-wrap">
+          <div id="status-line" class="status-line">
+            Carregando...
+          </div>
+
+          <div class="scoreline" id="scorebar" aria-live="polite">
+            <div class="pill you"><span id="label-you">Você</span>: <span id="score-you">5</span></div>
+            <div class="pill ai"><span id="label-ai">Oponente</span>: <span id="score-ai">5</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tb-right">
+        <div class="sound-controls">
+          <label class="inline" style="font-size:12px;"><input type="checkbox" id="sound-enabled" checked> Som</label>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <div class="hand you" id="hand-you"></div>
+
+      <div class="board-wrap">
+        <div id="rule-banner" class="rule-banner hidden">SAME</div>
+        <div id="board" class="board" aria-label="Tabuleiro 3x3"></div>
+      </div>
+
+      <div class="hand ai" id="hand-ai"></div>
+    </main>
+
+    <div id="result-modal" class="win-banner">
+      <div class="box">
+        <h2 id="result-title">Resultado</h2>
+        <p id="result-detail"></p>
+        <div class="actions">
+          <button id="btn-again" class="btn primary">Jogar novamente</button>
+          <button id="btn-close" class="btn small">Fechar Tabuleiro</button>
+        </div>
       </div>
     </div>
   </div>
