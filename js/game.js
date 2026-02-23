@@ -214,6 +214,7 @@ function initUI() {
       state.rules.combo = $("#online-rule-combo").checked;
       state.rules.elemental = $("#online-rule-elemental").checked;
       state.rules.samewall = $("#online-rule-samewall").checked;
+      state.wallLevel = parseInt($("#online-wall-level").value) || 5;
       state.firstMove = $("#online-first-move").value;
       const useRandom = $("#online-random-cards").value === 'yes';
 
@@ -273,8 +274,11 @@ function initUI() {
   });
 
   refreshStatusLine();
-  // Mostra o menu inicial ao carregar o jogo
-  showScreen("main-menu");
+  // Mostra o menu inicial ao carregar o jogo, apenas se não estivermos entrando numa sala
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!urlParams.get('room')) {
+    showScreen("main-menu");
+  }
 }
 
 function startQuickGame() {
@@ -336,7 +340,7 @@ function openDeckBuilder() {
   $("#deck-preview").innerHTML = "";
   $("#btn-start-battle").disabled = true;
 
-  document.getElementById("deck-modal").classList.remove("hidden");
+  showScreen("deck-modal");
 
   renderDeckGrid();
 }
@@ -519,6 +523,7 @@ function setupOnlineGame(data, amIHost) {
   state.aiStarts = !state.yourTurn;
 
   state.busy = false;
+  showScreen(null); // Garante que nenhum modal (menu, lobby, etc) atrapalhe
   renderAll();
   updateActiveHandIndicator();
 }
