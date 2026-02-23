@@ -24,9 +24,7 @@ const state = {
   firstMove: "random", aiStarts: false,
   deckSelection: [],
   matchmaking: null,
-  isOnline: false,
-  flowMode: "local", // 'local', 'quick', 'online'
-  isRandomBattle: false
+  isOnline: false
 };
 
 // Instância do Matchmaking
@@ -61,15 +59,6 @@ let boardEl, handYouEl, handAiEl, bannerEl;
 
 function debugLog(msg, tag) { if (!state.debug) return; const log = $("#debug-log"); if (!log) return; const div = document.createElement("div"); div.className = "line"; const t = document.createElement("span"); t.className = "tag " + (tag || ""); t.textContent = (tag || "DBG").toUpperCase(); const s = document.createElement("span"); s.textContent = " " + msg; div.append(t, s); log.append(div); log.scrollTop = log.scrollHeight; console.log("TT-Debug", tag || "", msg); }
 function debugClear() { const log = $("#debug-log"); if (log) log.innerHTML = ""; }
-
-function showScreen(screenId) {
-  // Oculta tudo que é "overlay" exceto o que a gente quer mostrar
-  document.querySelectorAll(".modal-overlay").forEach(el => el.classList.add("hidden"));
-  if (screenId) {
-    const el = $("#" + screenId);
-    if (el) el.classList.remove("hidden");
-  }
-}
 function showReason(idx, text) { if (!state.debug) return; const cell = boardEl.children[idx]; if (!cell) return; const b = document.createElement("div"); b.className = "flip-reason"; b.textContent = text; cell.appendChild(b); setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 1000); }
 
 function refreshStatusLine() {
@@ -126,139 +115,117 @@ function initUI() {
   $("#btn-menu").addEventListener("click", () => { drawer.classList.remove("hidden"); setTimeout(() => drawer.classList.add("open"), 10); overlay.classList.remove("hidden"); });
   $("#btn-close-drawer").addEventListener("click", closeDrawer);
   $("#overlay").addEventListener("click", closeDrawer);
+  $("#drawer-restart").addEventListener("click", () => { closeDrawer(); openDeckBuilder(); });
 
-  $("#rules-elemental")?.addEventListener("change", e => { state.rules.elemental = e.target.checked; refreshBoardStats(); refreshStatusLine(); });
+  $("#rule-same").addEventListener("change", e => { state.rules.same = e.target.checked; refreshStatusLine(); });
+  $("#rule-plus").addEventListener("change", e => { state.rules.plus = e.target.checked; refreshStatusLine(); });
+  $("#rule-samewall").addEventListener("change", e => { state.rules.samewall = e.target.checked; refreshStatusLine(); });
+  $("#rule-combo").addEventListener("change", e => { state.rules.combo = e.target.checked; refreshStatusLine(); });
+  $("#rule-elemental").addEventListener("change", e => { state.rules.elemental = e.target.checked; refreshBoardStats(); refreshStatusLine(); });
 
-  // Botões do Menu Principal
-  $("#btn-play-local").addEventListener("click", () => {
-    state.flowMode = "local";
-    state.isOnline = false;
-    showScreen("rules-modal");
+  $("#ai-level").addEventListener("change", e => {
+    state.aiLevel = e.target.value;
+    const hideCk = $("#hide-opponent");
+    if (state.aiLevel === "off") { state.hideOpponent = false; if (hideCk) { hideCk.checked = false; hideCk.disabled = true; } }
+    else { if (hideCk) hideCk.disabled = false; }
+    renderHands(); refreshStatusLine(); updateActiveHandIndicator();
   });
 
-  $("#btn-play-quick").addEventListener("click", () => {
-    state.flowMode = "quick";
-    state.isOnline = false;
-    startQuickGame();
-  });
+  $("#hide-opponent").addEventListener("change", e => { if (state.aiLevel === "off") return; state.hideOpponent = e.target.checked; renderHands(); });
 
-  $("#btn-play-online").addEventListener("click", () => {
-    state.flowMode = "online";
-    state.isOnline = true;
-    showScreen("rules-online-modal");
-  });
-
-  // Botões de Regras Local
-  $("#btn-rules-back").addEventListener("click", () => showScreen("main-menu"));
-  $("#btn-rules-continue").addEventListener("click", () => {
-    // Sincroniza state com UI do modal
-    state.aiLevel = $("#rules-ai-level").value;
-    state.firstMove = $("#rules-first-move").value;
-    state.rules.same = $("#rules-same").checked;
-    state.rules.plus = $("#rules-plus").checked;
-    state.rules.combo = $("#rules-combo").checked;
-    state.rules.elemental = $("#rules-elemental").checked;
-    state.rules.samewall = $("#rules-samewall").checked;
-    state.wallLevel = parseInt($("#rules-wall-level").value) || 5;
-    state.hideOpponent = $("#rules-hide-opponent").checked;
-
-    // Agora vai para o deck builder (com range padrão 1-10 por enquanto ou o que estava no drawer)
-    openLocalDeckBuilder();
-  });
-
-  // Botões de Regras Online
-  $("#btn-online-rules-back").addEventListener("click", () => showScreen("main-menu"));
-  $("#btn-online-rules-create").addEventListener("click", () => createOnlineRoom());
+  $("#btn-filter-apply").addEventListener("click", () => renderDeckGrid());
 
   $("#btn-start-battle").addEventListener("click", () => {
-    state.isRandomBattle = false;
-    showScreen(null);
+    document.getElementById("deck-modal").classList.add("hidden");
     startBattleWithSelection();
   });
 
   $("#btn-random-deck").addEventListener("click", () => {
-    state.isRandomBattle = true;
-    showScreen(null);
     startRandomBattle();
   });
 
-  $("#btn-exit-to-menu").addEventListener("click", () => {
-    location.reload(); // Forma mais segura de resetar tudo
-  });
+  const changeLvl = (isMax, val) => {
+    val = Math.max(1, Math.min(10, parseInt(val) || 1));
+    if (isMax) { state.maxLevel = val; if (state.minLevel > val) state.minLevel = val; }
+    else { state.minLevel = val; if (state.maxLevel < val) state.maxLevel = val; }
+    $("#min-level").value = state.minLevel; $("#max-level").value = state.maxLevel;
+    $("#filter-min").value = state.minLevel;
+    $("#filter-max").value = state.maxLevel;
+    openDeckBuilder();
+    refreshStatusLine();
+  };
+  $("#max-level").addEventListener("change", e => changeLvl(true, e.target.value));
+  $("#min-level").addEventListener("change", e => changeLvl(false, e.target.value));
+  $("#wall-level").addEventListener("change", e => { let v = e.target.value; if (v === "A" || v === "a") v = "10"; state.wallLevel = parseInt(v) || 5; refreshStatusLine(); });
 
+  $("#first-move").addEventListener("change", e => { state.firstMove = e.target.value; });
   $("#btn-restart").addEventListener("click", () => openDeckBuilder());
   $("#sound-enabled").addEventListener("change", e => state.soundEnabled = e.target.checked);
   $("#sound-volume").addEventListener("input", e => state.soundVolume = parseFloat(e.target.value));
   $("#debug-mode").addEventListener("change", e => { state.debug = e.target.checked; $("#debug-panel").classList.toggle("hidden", !state.debug); });
   $("#debug-clear").addEventListener("click", debugClear);
 
-  $("#btn-again").addEventListener("click", () => {
-    $("#result-modal").classList.remove("show");
-    if (state.flowMode === 'quick') {
-      startQuickGame();
-    } else if (state.isRandomBattle) {
-      startRandomBattle();
-    } else {
-      openDeckBuilder();
-    }
-  });
+  $("#btn-again").addEventListener("click", () => { $("#result-modal").classList.remove("show"); openDeckBuilder(); });
   $("#btn-close").addEventListener("click", () => { $("#result-modal").classList.remove("show"); });
 
 
-  async function createOnlineRoom() {
+  $("#btn-create-room").addEventListener("click", async () => {
     try {
-      state.minLevel = parseInt($("#online-min-level").value) || 1;
-      state.maxLevel = parseInt($("#online-max-level").value) || 10;
-      state.rules.same = $("#online-rule-same").checked;
-      state.rules.plus = $("#online-rule-plus").checked;
-      state.rules.combo = $("#online-rule-combo").checked;
-      state.rules.elemental = $("#online-rule-elemental").checked;
-      state.rules.samewall = $("#online-rule-samewall").checked;
-      state.wallLevel = parseInt($("#online-wall-level").value) || 5;
-      state.firstMove = $("#online-first-move").value;
-      const useRandom = $("#online-random-cards").value === 'yes';
-
-      showScreen("lobby-modal");
+      document.getElementById("deck-modal").classList.add("hidden");
+      document.getElementById("lobby-modal").classList.remove("hidden");
       $("#lobby-status").textContent = "Criando sala no servidor...";
 
       const initialData = generateInitialData();
-      // O host define se será aleatório ou não inicialmente para o guest
-      initialData.useRandom = useRandom;
-      initialData.rules = { ...state.rules };
-      initialData.wallLevel = state.wallLevel;
-      initialData.minLevel = state.minLevel;
-      initialData.maxLevel = state.maxLevel;
-
+      // Salva e cria a sala com os dados gerados
       const roomId = await state.matchmaking.createRoom(initialData);
 
+      // Robust link generation (handles file:// protocol where origin is null)
       let baseUrl = window.location.href.split('?')[0];
       const link = `${baseUrl}?room=${roomId}`;
+
       $("#room-link").value = link;
       $("#lobby-status").textContent = "Aguardando oponente...";
 
+      // Configura o jogo localmente com os dados que acabamos de gerar
       setupOnlineGame(initialData, true);
 
-      // Hook no matchmaking
+      // Monitorar conexão
+      const checkInterval = setInterval(() => {
+        // O matchmaking.js já faz o listen, mas precisamos saber quando começar
+        // Vamos adicionar um callback ou verificar o status via hook
+      }, 1000);
+
+      // Hook no matchmaking para saber quando o oponente entrar
+      const originalHandle = state.matchmaking.handleRoomUpdate.bind(state.matchmaking);
       state.matchmaking.handleRoomUpdate = (data) => {
+        originalHandle(data);
+
+        console.log("Hook handleRoomUpdate:", data); // Debug
+        // Log extra details
+        console.log("My role:", state.matchmaking.playerId);
+        console.log("Guest connected?", data.guestConnected);
+
         if (data.guestConnected && state.matchmaking.playerId === 'host') {
+          // Verifica se já não estamos jogando para evitar restart visual
+          // O modal estar visível é um bom indicador de que ainda estamos no lobby
           const lobby = document.getElementById("lobby-modal");
           if (!lobby.classList.contains("hidden")) {
-            console.log("Oponente detectado!");
+            console.log("Oponente detectado! Iniciando partida...");
             lobby.classList.add("hidden");
-            if (useRandom) {
-              startOnlineMatch('host');
-            } else {
-              openDeckBuilder();
-            }
+            startOnlineMatch('host');
+          } else {
+            console.log("Ignorando hook: Lobby já escondido (já estamos jogando?)");
           }
         }
       };
     } catch (e) {
-      console.error("Erro ao configurar sala:", e);
-      alert("Erro: " + e.message);
-      showScreen("rules-online-modal");
+      console.error("Erro ao criar sala:", e);
+      $("#lobby-status").textContent = "Erro: " + e.message;
+      alert("Erro ao criar sala: " + e.message + "\nVerifique se a configuração do Firebase está correta.");
+      document.getElementById("lobby-modal").classList.add("hidden");
+      document.getElementById("deck-modal").classList.remove("hidden");
     }
-  }
+  });
 
   $("#btn-copy-link").addEventListener("click", () => {
     const copyText = document.getElementById("room-link");
@@ -274,60 +241,24 @@ function initUI() {
   });
 
   refreshStatusLine();
-  // Mostra o menu inicial ao carregar o jogo, apenas se não estivermos entrando numa sala
-  const urlParams = new URLSearchParams(window.location.search);
-  if (!urlParams.get('room')) {
-    showScreen("main-menu");
-  }
-}
-
-function startQuickGame() {
-  state.aiLevel = "hard";
-  state.rules = { same: true, plus: true, samewall: true, combo: true, elemental: true };
-  state.minLevel = 1;
-  state.maxLevel = 10;
-  state.wallLevel = 5;
-  state.hideOpponent = false;
-  state.firstMove = "random";
-  state.isOnline = false;
-  state.isRandomBattle = true;
-
-  showScreen(null);
-  startRandomBattle();
-}
-
-function openLocalDeckBuilder() {
-  // O range de nível já foi definido possivelmente no rules-modal? 
-  // Na verdade, o rules-modal local não tinha range. Vou usar 1-10.
-  state.minLevel = 1;
-  state.maxLevel = 10;
-  openDeckBuilder();
 }
 
 function startOnlineMatch(role, roomData = null) {
   state.isOnline = true;
   state.aiLevel = "off";
   state.hideOpponent = false;
-  state.flowMode = "online";
+
+  $("#status-line").innerHTML = `Modo Online: <b>${role === 'host' ? 'Você (Azul)' : 'Você (Vermelho)'}</b>`;
+
+  state.firstMove = "you";
+  // A logica real de turno vem do setupOnlineGame
 
   if (roomData) {
-    // Sincroniza regras e range do Host
-    if (roomData.rules) state.rules = { ...state.rules, ...roomData.rules };
-    if (roomData.wallLevel) state.wallLevel = roomData.wallLevel;
-    if (roomData.minLevel) state.minLevel = roomData.minLevel;
-    if (roomData.maxLevel) state.maxLevel = roomData.maxLevel;
-
-    $("#status-line").innerHTML = `Modo Online: <b>P2 (Vermelho)</b>`;
-
-    // Se não for aleatório, abre o deck builder filtrado
-    if (roomData.useRandom === false) {
-      openDeckBuilder();
-    } else {
-      setupOnlineGame(roomData, false);
-    }
+    // Sou Guest (ou Host reconectando, mas por enquanto, Guest)
+    setupOnlineGame(roomData, false);
   } else {
-    // Sou Host
-    $("#status-line").innerHTML = `Modo Online: <b>P1 (Azul)</b>`;
+    // Sou Host e já chamei setupOnlineGame antes de criar a sala
+    // Apenas garantimos a UI
     renderAll();
     updateActiveHandIndicator();
   }
@@ -340,14 +271,17 @@ function openDeckBuilder() {
   $("#deck-preview").innerHTML = "";
   $("#btn-start-battle").disabled = true;
 
-  showScreen("deck-modal");
+  document.getElementById("deck-modal").classList.remove("hidden");
+  $("#filter-min").value = state.minLevel;
+  $("#filter-max").value = state.maxLevel;
 
   renderDeckGrid();
 }
 
 function renderDeckGrid() {
-  const min = state.minLevel;
-  const max = state.maxLevel;
+  const min = parseInt($("#filter-min").value) || 1;
+  const max = parseInt($("#filter-max").value) || 10;
+  state.minLevel = min; state.maxLevel = max;
   refreshStatusLine();
 
   const grid = $("#deck-grid");
@@ -403,8 +337,10 @@ function startBattleWithSelection() {
 }
 
 function startRandomBattle() {
-  const min = state.minLevel;
-  const max = state.maxLevel;
+  const min = parseInt($("#filter-min").value) || 1;
+  const max = parseInt($("#filter-max").value) || 10;
+  state.minLevel = min;
+  state.maxLevel = max;
   const randomDeck = weightedRandomHand(5, min, max);
   document.getElementById("deck-modal").classList.add("hidden");
   deal(randomDeck);
@@ -523,7 +459,6 @@ function setupOnlineGame(data, amIHost) {
   state.aiStarts = !state.yourTurn;
 
   state.busy = false;
-  showScreen(null); // Garante que nenhum modal (menu, lobby, etc) atrapalhe
   renderAll();
   updateActiveHandIndicator();
 }
@@ -1117,8 +1052,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       startOnlineMatch('guest', roomData);
     } catch (e) {
       alert("Erro ao entrar na sala: " + e.message);
-      showScreen("main-menu");
+      openDeckBuilder();
     }
+  } else {
+    openDeckBuilder();
   }
 
   // Expose helpers for DragWithin
