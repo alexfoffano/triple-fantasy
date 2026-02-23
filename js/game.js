@@ -126,9 +126,8 @@ function initUI() {
   $("#btn-menu").addEventListener("click", () => { drawer.classList.remove("hidden"); setTimeout(() => drawer.classList.add("open"), 10); overlay.classList.remove("hidden"); });
   $("#btn-close-drawer").addEventListener("click", closeDrawer);
   $("#overlay").addEventListener("click", closeDrawer);
-  $("#drawer-restart").addEventListener("click", () => { closeDrawer(); openDeckBuilder(); });
 
-  $("#rules-rules-elemental")?.addEventListener("change", e => { state.rules.elemental = e.target.checked; refreshBoardStats(); refreshStatusLine(); });
+  $("#rules-elemental")?.addEventListener("change", e => { state.rules.elemental = e.target.checked; refreshBoardStats(); refreshStatusLine(); });
 
   // Botões do Menu Principal
   $("#btn-play-local").addEventListener("click", () => {
@@ -187,30 +186,11 @@ function initUI() {
     location.reload(); // Forma mais segura de resetar tudo
   });
 
-  const changeLvl = (isMax, val) => {
-    val = Math.max(1, Math.min(10, parseInt(val) || 1));
-    if (isMax) { state.maxLevel = val; if (state.minLevel > val) state.minLevel = val; }
-    else { state.minLevel = val; if (state.maxLevel < val) state.maxLevel = val; }
-    $("#min-level").value = state.minLevel; $("#max-level").value = state.maxLevel;
-    $("#filter-min").value = state.minLevel;
-    $("#filter-max").value = state.maxLevel;
-    openDeckBuilder();
-    refreshStatusLine();
-  };
-  $("#max-level").addEventListener("change", e => changeLvl(true, e.target.value));
-  $("#min-level").addEventListener("change", e => changeLvl(false, e.target.value));
-  $("#wall-level").addEventListener("change", e => { let v = e.target.value; if (v === "A" || v === "a") v = "10"; state.wallLevel = parseInt(v) || 5; refreshStatusLine(); });
-
-  $("#first-move").addEventListener("change", e => { state.firstMove = e.target.value; });
   $("#btn-restart").addEventListener("click", () => openDeckBuilder());
   $("#sound-enabled").addEventListener("change", e => state.soundEnabled = e.target.checked);
   $("#sound-volume").addEventListener("input", e => state.soundVolume = parseFloat(e.target.value));
   $("#debug-mode").addEventListener("change", e => { state.debug = e.target.checked; $("#debug-panel").classList.toggle("hidden", !state.debug); });
   $("#debug-clear").addEventListener("click", debugClear);
-
-  $("#btn-again").addEventListener("click", () => { $("#result-modal").classList.remove("show"); openDeckBuilder(); });
-  $("#btn-close").addEventListener("click", () => { $("#result-modal").classList.remove("show"); });
-
 
   $("#btn-again").addEventListener("click", () => {
     $("#result-modal").classList.remove("show");
@@ -1132,7 +1112,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       startOnlineMatch('guest', roomData);
     } catch (e) {
       alert("Erro ao entrar na sala: " + e.message);
-      openDeckBuilder();
+      showScreen("main-menu");
     }
   }
 
