@@ -8,7 +8,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Seleciona todas as cartas que não estão desabilitadas
     const getPlayableCards = () => document.querySelectorAll('.hand .card:not(.disabled)');
-    
+
     let activeCard = null;
     let clone = null;
     let initialRect = null;
@@ -27,11 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Detecta dono dinamicamente (para suportar Jogador 2)
         const owner = card.closest('.hand').classList.contains('ai') ? 'ai' : 'you';
 
+        console.log(`[mobile-dnd] Triggering move: owner=${owner}, handIndex=${cardIndex}, cellIndex=${cellIndex}`);
+
         if (typeof window.playCard === 'function') {
             window.playCard(owner, cardIndex, cellIndex);
         } else {
-            document.dispatchEvent(new CustomEvent('tt:playCard', { 
-                detail: { owner, hindex: cardIndex, cindex: cellIndex } 
+            document.dispatchEvent(new CustomEvent('tt:playCard', {
+                detail: { owner, hindex: cardIndex, cindex: cellIndex }
             }));
         }
     }
@@ -39,12 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EVENTOS ---
     function onPointerDown(e) {
         const card = e.target.closest('.card');
-        
+
         // Verifica se é uma carta válida e se não está desabilitada
         if (!card || card.classList.contains('disabled')) return;
-        
+
         e.preventDefault();
-        
+
         activeCard = card;
         initialRect = card.getBoundingClientRect();
         touchOffsetX = e.clientX - initialRect.left;
@@ -52,10 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clone Visual
         clone = card.cloneNode(true);
-        
+
         // Garante que o clone mostre a face da carta
-        clone.classList.remove('flipped'); 
-        
+        clone.classList.remove('flipped');
+
         Object.assign(clone.style, {
             position: 'fixed',
             left: `${initialRect.left}px`,
@@ -65,13 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
             zIndex: '9999',
             pointerEvents: 'none',
             opacity: '0.9',
-            transform: 'scale(1.1)', 
+            transform: 'scale(1.1)',
             transition: 'none'
         });
-        
+
         clone.classList.remove('selected');
         document.body.appendChild(clone);
-        
+
         activeCard.classList.add('drag-origin-dim');
         activeCard.style.opacity = '0.4';
 
@@ -83,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function onPointerMove(e) {
         if (!activeCard || !clone) return;
-        
+
         const x = e.clientX - touchOffsetX;
         const y = e.clientY - touchOffsetY;
         clone.style.left = `${x}px`;
@@ -100,14 +102,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (targetCell && targetCell.classList.contains('empty')) {
             triggerGameMove(activeCard, targetCell);
-        } 
+        }
 
         cleanup();
     }
 
     // --- AUXILIARES ---
     function getDropTarget(x, y) {
+        // Hide clone temporarily to accurately see what's underneath
+        let oldDisplay;
+        if (clone) {
+            oldDisplay = clone.style.display;
+            clone.style.display = 'none';
+        }
+
         const el = document.elementFromPoint(x, y);
+
+        if (clone) {
+            clone.style.display = oldDisplay;
+        }
+
         return el ? el.closest('.cell') : null;
     }
 
@@ -134,14 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
             activeCard.classList.remove('drag-origin-dim');
             activeCard.style.opacity = '';
         }
-        
+
         if (clone) clone.remove();
-        
+
         if (currentHovered) {
             currentHovered.classList.remove('drag-hover');
             currentHovered = null;
         }
-        
+
         activeCard = null;
         clone = null;
     }
