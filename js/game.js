@@ -197,9 +197,6 @@ function initUI() {
   $("#wall-level").addEventListener("change", e => { let v = e.target.value; if (v === "A" || v === "a") v = "10"; state.wallLevel = parseInt(v) || 5; refreshStatusLine(); });
 
   $("#first-move").addEventListener("change", e => { state.firstMove = e.target.value; });
-  $("#sound-volume").addEventListener("input", e => state.soundVolume = parseFloat(e.target.value));
-  $("#debug-mode").addEventListener("change", e => { state.debug = e.target.checked; $("#debug-panel").classList.toggle("hidden", !state.debug); });
-  $("#debug-clear").addEventListener("click", debugClear);
 
   $("#btn-again").addEventListener("click", () => {
     $("#result-modal").classList.remove("show");

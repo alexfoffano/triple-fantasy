@@ -45,7 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Verifica se é uma carta válida e se não está desabilitada
         if (!card || card.classList.contains('disabled')) return;
 
-        e.preventDefault();
+        if (e.pointerType !== 'mouse') {
+            e.preventDefault();
+        }
 
         activeCard = card;
         initialRect = card.getBoundingClientRect();
@@ -99,6 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         activeCard.releasePointerCapture(e.pointerId);
         const targetCell = getDropTarget(e.clientX, e.clientY);
+
+        console.log(`[mobile-dnd] PointerUp na célula:`, targetCell);
 
         if (targetCell && targetCell.classList.contains('empty')) {
             triggerGameMove(activeCard, targetCell);
