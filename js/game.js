@@ -898,13 +898,19 @@ function endGame() {
     });
   } else {
     // OFFLINE: Restaura botões padrão se necessário
-    // (Idealmente teríamos um template HTML fixo, mas ok injetar aqui)
     const actions = document.querySelector("#result-modal .actions");
     actions.innerHTML = `
         <button id="btn-again" class="btn primary">Jogar novamente</button>
         <button id="btn-close" class="btn small">Fechar</button>
        `;
-    $("#btn-again").addEventListener("click", () => { $("#result-modal").classList.remove("show"); openDeckBuilder(); });
+    $("#btn-again").addEventListener("click", () => {
+      $("#result-modal").classList.remove("show");
+      if (state.gameMode === "quick") {
+        startRandomBattle();
+      } else {
+        openDeckBuilder();
+      }
+    });
     $("#btn-close").addEventListener("click", () => { $("#result-modal").classList.remove("show"); });
   }
 
