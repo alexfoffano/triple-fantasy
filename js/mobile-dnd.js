@@ -45,9 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Verifica se é uma carta válida e se não está desabilitada
         if (!card || card.classList.contains('disabled')) return;
 
-        if (e.pointerType !== 'mouse') {
-            e.preventDefault();
-        }
+        e.preventDefault();
 
         activeCard = card;
         initialRect = card.getBoundingClientRect();
@@ -79,10 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
         activeCard.classList.add('drag-origin-dim');
         activeCard.style.opacity = '0.4';
 
-        card.setPointerCapture(e.pointerId);
-        card.addEventListener('pointermove', onPointerMove);
-        card.addEventListener('pointerup', onPointerUp);
-        card.addEventListener('pointercancel', onPointerUp);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+        document.addEventListener('pointercancel', onPointerUp);
     }
 
     function onPointerMove(e) {
@@ -99,33 +96,43 @@ document.addEventListener('DOMContentLoaded', () => {
     function onPointerUp(e) {
         if (!activeCard) return;
 
-        activeCard.releasePointerCapture(e.pointerId);
-        const targetCell = getDropTarget(e.clientX, e.clientY);
 
-        console.log(`[mobile-dnd] PointerUp na célula:`, targetCell);
+
+        // Esconde clone completamente do DOM temporariamente
+        if (clone) clone.style.visibility = 'hidden';
+
+        const rawElement = document.elementFromPoint(e.clientX, e.clientY);
+        const targetCell = rawElement ? rawElement.closest('.cell') : null;
+
+        console.log(`[mobile-dnd] PointerUp at (${e.clientX}, ${e.clientY}). Raw hit:`, rawElement, ` -> Cell:`, targetCell);
 
         if (targetCell && targetCell.classList.contains('empty')) {
             triggerGameMove(activeCard, targetCell);
+        } else {
+            console.warn(`[mobile-dnd] Cannot drop. Target is invalid or not empty.`);
         }
+
+        if (clone) clone.style.visibility = 'visible';
 
         cleanup();
     }
 
     // --- AUXILIARES ---
     function getDropTarget(x, y) {
-        // Hide clone temporarily to accurately see what's underneath
-        let oldDisplay;
+        let parent = null;
+        let nextSibling = null;
         if (clone) {
-            oldDisplay = clone.style.display;
-            clone.style.display = 'none';
+            parent = clone.parentNode;
+            nextSibling = clone.nextSibling;
+            if (parent) parent.removeChild(clone);
         }
 
         const el = document.elementFromPoint(x, y);
 
-        if (clone) {
-            clone.style.display = oldDisplay;
+        if (clone && parent) {
+            if (nextSibling) parent.insertBefore(clone, nextSibling);
+            else parent.appendChild(clone);
         }
-
         return el ? el.closest('.cell') : null;
     }
 
@@ -145,10 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function cleanup() {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointercancel', onPointerUp);
+
         if (activeCard) {
-            activeCard.removeEventListener('pointermove', onPointerMove);
-            activeCard.removeEventListener('pointerup', onPointerUp);
-            activeCard.removeEventListener('pointercancel', onPointerUp);
             activeCard.classList.remove('drag-origin-dim');
             activeCard.style.opacity = '';
         }
