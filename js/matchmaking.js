@@ -50,7 +50,12 @@ export class Matchmaking {
             boardElements: initialGameState.boardElements,
             hostHand: [],
             guestHand: [],
-            lastMove: null
+            lastMove: null,
+            rules: initialGameState.rules,
+            wallLevel: initialGameState.wallLevel,
+            minLevel: initialGameState.minLevel,
+            maxLevel: initialGameState.maxLevel,
+            hideOpponent: initialGameState.hideOpponent
         };
 
         console.log("Matchmaking: Salvando sala no Firestore...", this.roomId);
