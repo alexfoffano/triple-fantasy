@@ -65,14 +65,18 @@ function showReason(idx, text) { if (!state.debug) return; const cell = boardEl.
 function refreshStatusLine() {
   const aiMap = { off: "Desligado (2P)", easy: "Fácil", medium: "Médio", hard: "Difícil", master: "Mestre" };
   const rules = []; if (state.rules.same) rules.push("Same"); if (state.rules.plus) rules.push("Plus"); if (state.rules.samewall) rules.push("Wall(" + state.wallLevel + ")"); if (state.rules.elemental) rules.push("Elemental"); if (state.rules.combo) rules.push("Combo");
-  $("#status-line").innerHTML = `Nível: <b>${state.minLevel}–${state.maxLevel}</b> &nbsp; IA: <b>${aiMap[state.aiLevel] || state.aiLevel}</b> &nbsp; Regras: <b>${rules.join(" ") || "—"}</b>`;
+  if (state.isOnline) {
+    $("#status-line").innerHTML = `Nível: <b>${state.minLevel}–${state.maxLevel}</b> &nbsp; Oponente: <b>Online</b> &nbsp; Regras: <b>${rules.join(" ") || "—"}</b>`;
+  } else {
+    $("#status-line").innerHTML = `Nível: <b>${state.minLevel}–${state.maxLevel}</b> &nbsp; IA: <b>${aiMap[state.aiLevel] || state.aiLevel}</b> &nbsp; Regras: <b>${rules.join(" ") || "—"}</b>`;
+  }
   refreshScoreLabels();
 }
 
 function refreshScoreLabels() {
   const ly = $("#label-you"), la = $("#label-ai");
   if (!ly || !la) return;
-  if (state.aiLevel === 'off') { ly.textContent = 'Jogador 1'; la.textContent = 'Jogador 2'; }
+  if (state.aiLevel === 'off' && !state.isOnline) { ly.textContent = 'Jogador 1'; la.textContent = 'Jogador 2'; }
   else { ly.textContent = 'Você'; la.textContent = 'Oponente'; }
 }
 
@@ -315,7 +319,7 @@ function startOnlineMatch(role, roomData = null) {
   state.aiLevel = "off";
   // Hand visibility respects what the host decided (passed into state.hideOpponent locally by host, or should be synced. For now, guest assumes host config if not passed, but let's keep it simple)
 
-  $("#status-line").innerHTML = `Modo Online: <b>${role === 'host' ? 'Você (Azul)' : 'Você (Vermelho)'}</b>`;
+  refreshStatusLine();
 
   state.firstMove = "you";
 
