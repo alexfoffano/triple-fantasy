@@ -320,7 +320,7 @@ function startOnlineMatch(role, roomData = null) {
   state.firstMove = "you";
 
   if (roomData) {
-    setupOnlineGame(roomData, false);
+    setupOnlineGame(roomData, role === 'host');
   } else {
     renderAll();
     updateActiveHandIndicator();
