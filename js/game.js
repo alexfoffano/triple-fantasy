@@ -475,7 +475,8 @@ function generateInitialData(forceRandom = false) {
     wallLevel: state.wallLevel,
     minLevel: state.minLevel,
     maxLevel: state.maxLevel,
-    forceRandom: forceRandom
+    forceRandom: forceRandom,
+    hideOpponent: state.hideOpponent
   };
 }
 
@@ -652,7 +653,7 @@ function showStat(n) { return n === 11 ? "S" : (n === 10 ? "A" : n); }
 
 function renderHands() {
   handYouEl.innerHTML = ""; state.yourHand.forEach((c, i) => handYouEl.appendChild(createHandCard(c, "you", i)));
-  const faceDownOpp = (state.aiLevel !== "off") && state.hideOpponent;
+  const faceDownOpp = ((state.aiLevel !== "off") || state.isOnline) && state.hideOpponent;
   handAiEl.innerHTML = ""; state.aiHand.forEach((c, i) => handAiEl.appendChild(createHandCard(c, "ai", i, faceDownOpp)));
   updateActiveHandIndicator(); updateHandInteractivity();
 }
@@ -1177,6 +1178,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       state.minLevel = roomData.minLevel || 1;
       state.maxLevel = roomData.maxLevel || 10;
       state.rules = roomData.rules || state.rules;
+      if (roomData.hideOpponent !== undefined) {
+        state.hideOpponent = roomData.hideOpponent;
+      }
 
       const originalHandle = state.matchmaking.handleRoomUpdate.bind(state.matchmaking);
       state.matchmaking.handleRoomUpdate = (data) => {
