@@ -234,14 +234,8 @@ function initUI() {
 
     const isRandom = $("#online-random-cards").value === "yes";
 
-    if (isRandom) {
-      // Direct to Lobby, random cards will be generated on room creation
-      state.deckSelection = [];
-      createOnlineRoom(true);
-    } else {
-      // Go to deck builder
-      openDeckBuilder();
-    }
+    state.deckSelection = [];
+    createOnlineRoom(isRandom);
   });
 
   async function createOnlineRoom(forceRandom) {
@@ -258,17 +252,34 @@ function initUI() {
       $("#room-link").value = link;
       $("#lobby-status").textContent = "Aguardando oponente...";
 
-      setupOnlineGame(initialData, true);
+      state.matchmaking.deckStarted = false;
 
       const originalHandle = state.matchmaking.handleRoomUpdate.bind(state.matchmaking);
       state.matchmaking.handleRoomUpdate = (data) => {
         originalHandle(data);
 
-        if (data.guestConnected && state.matchmaking.playerId === 'host') {
+        // Se ambos estiverem prontos e o status for playing:
+        if (data.status === 'playing' && data.hostReady && data.guestReady) {
+          const screenGame = document.getElementById("screen-game");
+          if (!screenGame.classList.contains("active")) {
+            console.log("Ambos prontos! Iniciando partida...");
+            startOnlineMatch('host', data);
+          }
+        }
+
+        if (data.guestConnected && state.matchmaking.playerId === 'host' && data.status === 'waiting' && !state.matchmaking.deckStarted) {
+          state.matchmaking.deckStarted = true;
           const lobbyScreen = document.getElementById("screen-lobby");
           if (lobbyScreen.classList.contains("active")) {
-            console.log("Oponente detectado! Iniciando partida...");
-            startOnlineMatch('host');
+            console.log("Oponente detectado! Indo para deck building...");
+            if (data.forceRandom) {
+              const deck = weightedRandomHand(5, state.minLevel, state.maxLevel);
+              state.matchmaking.publishHand(deck);
+              showScreen("screen-lobby");
+              $("#lobby-status").textContent = "Aguardando oponente escolher o deck...";
+            } else {
+              openDeckBuilder();
+            }
           }
         }
       };
@@ -386,7 +397,9 @@ function updateDeckUI() {
 function startBattleWithSelection() {
   if (state.gameMode === "online") {
     // Online selected deck creation
-    createOnlineRoom(false);
+    state.matchmaking.publishHand(state.deckSelection);
+    showScreen("screen-lobby");
+    $("#lobby-status").textContent = "Aguardando oponente concluir o deck...";
   } else {
     // Local selected deck creation
     deal(state.deckSelection);
@@ -401,7 +414,9 @@ function startRandomBattle() {
   state.deckSelection = [];
 
   if (state.gameMode === "online") {
-    createOnlineRoom(false);
+    state.matchmaking.publishHand(randomDeck);
+    showScreen("screen-lobby");
+    $("#lobby-status").textContent = "Aguardando oponente concluir o deck...";
   } else {
     deal(randomDeck);
     showScreen("screen-game");
@@ -436,15 +451,7 @@ function weightedRandomHand(count, min, max) {
 }
 
 function generateInitialData(forceRandom = false) {
-  // Gera dados iniciais para uma nova partida (Hands + Elements)
-  const isRandom = forceRandom || state.deckSelection.length !== 5;
-  const playerDeck = isRandom ? weightedRandomHand(5, state.minLevel, state.maxLevel) : state.deckSelection;
-
-  // Hand do Host (Player 1)
-  const hostHand = playerDeck.map(c => ({ ...c }));
-
-  // Hand do Guest (Player 2)
-  const guestHand = weightedRandomHand(5, state.minLevel, state.maxLevel);
+  // Gera dados iniciais para uma nova partida, mas as mãos são vazias inicialmente no online
 
   // Tabuleiro Elemental
   const boardElements = Array(9).fill("None");
@@ -460,14 +467,15 @@ function generateInitialData(forceRandom = false) {
   if (state.firstMove === "ai") hostStarts = false;
 
   return {
-    hostHand,
-    guestHand,
+    hostHand: [],
+    guestHand: [],
     boardElements,
     turn: hostStarts ? 'host' : 'guest',
     rules: state.rules,
     wallLevel: state.wallLevel,
     minLevel: state.minLevel,
-    maxLevel: state.maxLevel
+    maxLevel: state.maxLevel,
+    forceRandom: forceRandom
   };
 }
 
@@ -926,8 +934,27 @@ Object.assign(state.matchmaking.game, {
     $("#result-modal").classList.remove("show");
     setupOnlineGame(data, state.matchmaking.playerId === 'host');
   },
-  triggerRematchSetup: () => {
-    const newData = generateInitialData();
+  triggerRematchSetup: async () => {
+    const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    const { db } = await import("./firebase-config.js");
+
+    const roomRef = doc(db, "matches", state.matchmaking.roomId);
+    const snap = await getDoc(roomRef);
+    const roomData = snap.data();
+
+    let newHostHand = roomData.hostHand;
+    let newGuestHand = roomData.guestHand;
+
+    // Se for randômico, gera novas mãos para a revanche
+    if (roomData.forceRandom) {
+      newHostHand = weightedRandomHand(5, state.minLevel, state.maxLevel);
+      newGuestHand = weightedRandomHand(5, state.minLevel, state.maxLevel);
+    }
+
+    const newData = generateInitialData(roomData.forceRandom);
+    newData.hostHand = newHostHand;
+    newData.guestHand = newGuestHand;
+
     state.matchmaking.resetMatch(newData);
   }
 });
@@ -1143,7 +1170,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const roomData = await state.matchmaking.joinRoom(roomId);
-      startOnlineMatch('guest', roomData);
+
+      state.gameMode = "online";
+      state.isOnline = true;
+      state.aiLevel = "off";
+      state.minLevel = roomData.minLevel || 1;
+      state.maxLevel = roomData.maxLevel || 10;
+      state.rules = roomData.rules || state.rules;
+
+      const originalHandle = state.matchmaking.handleRoomUpdate.bind(state.matchmaking);
+      state.matchmaking.handleRoomUpdate = (data) => {
+        originalHandle(data);
+
+        // Se ambos estiverem prontos e o status for playing:
+        if (data.status === 'playing' && data.hostReady && data.guestReady) {
+          const screenGame = document.getElementById("screen-game");
+          if (!screenGame.classList.contains("active")) {
+            startOnlineMatch('guest', data);
+          }
+        }
+      };
+
+      if (roomData.forceRandom) {
+        const deck = weightedRandomHand(5, state.minLevel, state.maxLevel);
+        state.matchmaking.publishHand(deck);
+        showScreen("screen-lobby");
+        $("#lobby-status").textContent = "Aguardando host escolher o deck...";
+      } else {
+        openDeckBuilder();
+      }
+
     } catch (e) {
       alert("Erro ao entrar na sala: " + e.message);
       showScreen("screen-main");

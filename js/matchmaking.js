@@ -42,11 +42,14 @@ export class Matchmaking {
             roundId: this.roundId, // ID da rodada atual no servidor
             hostConnected: true,
             guestConnected: false,
+            hostReady: false,
+            guestReady: false,
+            forceRandom: initialGameState.forceRandom || false,
             turn: initialGameState.turn, // 'host' ou 'guest'
             board: Array(9).fill(null),
             boardElements: initialGameState.boardElements,
-            hostHand: initialGameState.hostHand,
-            guestHand: initialGameState.guestHand,
+            hostHand: [],
+            guestHand: [],
             lastMove: null
         };
 
@@ -80,10 +83,9 @@ export class Matchmaking {
 
         this.roundId = docSnap.data().roundId; // Sincroniza roundId
 
-        // Atualiza status para playing
+        // Atualiza conexão (mantém status 'waiting' até que ambos estejam prontos)
         await updateDoc(roomRef, {
-            guestConnected: true,
-            status: 'playing'
+            guestConnected: true
         });
 
         this.listenToRoom(this.roomId);
@@ -149,15 +151,26 @@ export class Matchmaking {
             guestHand: newGameState.guestHand,
             lastMove: null,
             hostRematch: false,
-            guestRematch: false
+            guestRematch: false,
+            hostReady: true,
+            guestReady: true
         });
     }
 
     // Trata as atualizações recebidas
     handleRoomUpdate(data) {
         // 1. Verificar conexão do oponente
-        if (this.playerId === 'host' && data.guestConnected && data.status === 'playing') {
+        if (this.playerId === 'host' && data.guestConnected && data.status === 'waiting') {
             // Logic handled in game.js via hook
+        }
+
+        // 1.5 Verificar status do jogo para iniciar
+        if (data.status === 'waiting' && data.hostReady && data.guestReady) {
+            if (this.playerId === 'host') {
+                // Host altera para 'playing'
+                const roomRef = doc(db, "matches", this.roomId);
+                updateDoc(roomRef, { status: 'playing' }).catch(e => console.error("Erro ao iniciar jogo:", e));
+            }
         }
 
         // 2. Verificar Remoção de Sala ou Reset
@@ -203,6 +216,20 @@ export class Matchmaking {
                 card: cardData
             },
             // board: ... (poderíamos salvar o tabuleiro todo, mas por enquanto vamos confiar na sincronia dos movimentos)
+        });
+    }
+
+    // Publica a mão selecionada e sinaliza que o jogador está pronto
+    async publishHand(hand) {
+        if (!this.roomId) return;
+        const roomRef = doc(db, "matches", this.roomId);
+        const fieldHand = this.playerId === 'host' ? 'hostHand' : 'guestHand';
+        const fieldReady = this.playerId === 'host' ? 'hostReady' : 'guestReady';
+
+        console.log(`Matchmaking: Publicando mão para ${this.playerId}`);
+        await updateDoc(roomRef, {
+            [fieldHand]: hand,
+            [fieldReady]: true
         });
     }
 }
