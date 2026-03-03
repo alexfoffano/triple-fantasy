@@ -1182,6 +1182,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       state.minLevel = roomData.minLevel || 1;
       state.maxLevel = roomData.maxLevel || 10;
       state.rules = roomData.rules || state.rules;
+      state.wallLevel = roomData.wallLevel || 5;
       if (roomData.hideOpponent !== undefined) {
         state.hideOpponent = roomData.hideOpponent;
       }
