@@ -200,6 +200,24 @@ function initUI() {
 
   $("#wall-level").addEventListener("change", e => { let v = e.target.value; if (v === "A" || v === "a") v = "10"; state.wallLevel = parseInt(v) || 5; refreshStatusLine(); });
 
+  $("#local-deck-min-level").addEventListener("change", e => {
+    state.minLevel = parseInt(e.target.value) || 1;
+    state.maxLevel = Math.max(state.minLevel, parseInt($("#local-deck-max-level").value) || 10);
+    $("#local-deck-max-level").value = state.maxLevel;
+    state.deckSelection = state.deckSelection.filter(c => (c.level || 1) >= state.minLevel && (c.level || 1) <= state.maxLevel);
+    renderDeckGrid();
+    updateDeckUI();
+  });
+
+  $("#local-deck-max-level").addEventListener("change", e => {
+    state.maxLevel = parseInt(e.target.value) || 10;
+    state.minLevel = Math.min(state.maxLevel, parseInt($("#local-deck-min-level").value) || 1);
+    $("#local-deck-min-level").value = state.minLevel;
+    state.deckSelection = state.deckSelection.filter(c => (c.level || 1) >= state.minLevel && (c.level || 1) <= state.maxLevel);
+    renderDeckGrid();
+    updateDeckUI();
+  });
+
   $("#first-move").addEventListener("change", e => { state.firstMove = e.target.value; });
 
   $("#btn-again").addEventListener("click", () => {
@@ -339,9 +357,18 @@ function openDeckBuilder() {
   $("#deck-preview").innerHTML = "";
   $("#btn-start-battle").disabled = true;
 
-  // Atualizar rótulos informativos
-  $("#lbl-min-level").textContent = state.minLevel;
-  $("#lbl-max-level").textContent = state.maxLevel;
+  if (state.gameMode === "local") {
+    $("#deck-range-text").style.display = "none";
+    $("#deck-range-inputs").style.display = "flex";
+    $("#local-deck-min-level").value = state.minLevel;
+    $("#local-deck-max-level").value = state.maxLevel;
+  } else {
+    $("#deck-range-text").style.display = "block";
+    $("#deck-range-inputs").style.display = "none";
+    // Atualizar rótulos informativos
+    $("#lbl-min-level").textContent = state.minLevel;
+    $("#lbl-max-level").textContent = state.maxLevel;
+  }
 
   showScreen("screen-deck");
 
