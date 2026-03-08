@@ -70,6 +70,13 @@ function refreshStatusLine() {
   } else {
     $("#status-line").innerHTML = `Nível: <b>${state.minLevel}–${state.maxLevel}</b> &nbsp; IA: <b>${aiMap[state.aiLevel] || state.aiLevel}</b> &nbsp; Regras: <b>${rules.join(" ") || "—"}</b>`;
   }
+
+  // Sync com o Drawer Mobile
+  const drawerStatus = $("#drawer-status-line");
+  if (drawerStatus) {
+    drawerStatus.innerHTML = $("#status-line").innerHTML.replace(/&nbsp; /g, "<br>");
+  }
+
   refreshScoreLabels();
 }
 
@@ -156,6 +163,33 @@ function initUI() {
       // TODO: proper cleanup on exit
     }
     state.isOnline = false;
+  });
+
+  // Mobile Drawer Logic
+  const mobileDrawer = $("#mobile-drawer");
+  const mobileDrawerOverlay = $("#mobile-drawer-overlay");
+
+  function openMobileDrawer() {
+    mobileDrawer.classList.remove("hidden");
+    mobileDrawerOverlay.classList.remove("hidden");
+    setTimeout(() => mobileDrawer.classList.add("open"), 10);
+  }
+
+  function closeMobileDrawer() {
+    mobileDrawer.classList.remove("open");
+    setTimeout(() => {
+      mobileDrawer.classList.add("hidden");
+      mobileDrawerOverlay.classList.add("hidden");
+    }, 300);
+  }
+
+  $("#mobile-hamburger")?.addEventListener("click", openMobileDrawer);
+  $("#btn-close-drawer")?.addEventListener("click", closeMobileDrawer);
+  mobileDrawerOverlay?.addEventListener("click", closeMobileDrawer);
+
+  $("#btn-quit-game-mobile")?.addEventListener("click", () => {
+    closeMobileDrawer();
+    $("#btn-quit-game").click(); // reaproveita a lógica de sair normal
   });
 
   // Local Rules configuration

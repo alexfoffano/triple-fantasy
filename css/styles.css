@@ -668,6 +668,11 @@ body {
     display: none;
   }
 
+  /* Mostrar icon hamburger */
+  #mobile-hamburger {
+    display: flex !important;
+  }
+
   .tb-right {
     pointer-events: auto;
     position: absolute;

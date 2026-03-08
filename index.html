@@ -224,6 +224,9 @@
         <div class="sound-controls">
           <label class="inline" style="font-size:12px;"><input type="checkbox" id="sound-enabled" checked> Som</label>
         </div>
+        <div id="mobile-hamburger" class="hamburger" style="display: none;">
+          <span></span><span></span><span></span>
+        </div>
       </div>
     </header>
 
@@ -246,6 +249,26 @@
           <button id="btn-again" class="btn primary">Jogar novamente</button>
           <button id="btn-close" class="btn small">Fechar Tabuleiro</button>
         </div>
+      </div>
+    </div>
+
+    <!-- MOBILE DRAWER -->
+    <div id="mobile-drawer-overlay" class="overlay hidden"></div>
+    <div id="mobile-drawer" class="drawer hidden">
+      <div class="drawer-header">
+        <h3 style="margin:0; font-size:16px;">Menu da Partida</h3>
+        <button id="btn-close-drawer" class="btn icon">&times;</button>
+      </div>
+      <div class="drawer-content">
+        <div class="col">
+          <label style="color:var(--muted); font-size:12px; display:block; margin-bottom:5px;">Status</label>
+          <div id="drawer-status-line" style="font-size:14px; line-height:1.5;"></div>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <button id="btn-quit-game-mobile" class="btn small"
+          style="width:100%; text-align:center; background:rgba(248, 113, 113, 0.1); border-color:rgba(248, 113, 113, 0.3); color:#f87171;">Sair
+          da Partida</button>
       </div>
     </div>
   </div>
