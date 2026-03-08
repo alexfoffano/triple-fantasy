@@ -664,7 +664,8 @@ body {
 
   .tb-left,
   .status-line,
-  .topbar .btn.small {
+  .topbar .btn.small,
+  .sound-controls {
     display: none;
   }
 
@@ -682,7 +683,8 @@ body {
 
   .center-wrap {
     position: fixed;
-    bottom: 10px;
+    top: 15px;
+    bottom: auto;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(11, 24, 40, 0.95);

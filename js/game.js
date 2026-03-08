@@ -221,7 +221,20 @@ function initUI() {
   });
 
   // Global settings
-  $("#sound-enabled").addEventListener("change", e => state.soundEnabled = e.target.checked);
+  $("#sound-enabled").addEventListener("change", e => {
+    state.soundEnabled = e.target.checked;
+    const mobileSound = $("#sound-enabled-mobile");
+    if (mobileSound) mobileSound.checked = state.soundEnabled;
+  });
+
+  const mobileSoundBtn = $("#sound-enabled-mobile");
+  if (mobileSoundBtn) {
+    mobileSoundBtn.addEventListener("change", e => {
+      state.soundEnabled = e.target.checked;
+      const desktopSound = $("#sound-enabled");
+      if (desktopSound) desktopSound.checked = state.soundEnabled;
+    });
+  }
 
   // Deck Builder
   $("#btn-start-battle").addEventListener("click", () => {
